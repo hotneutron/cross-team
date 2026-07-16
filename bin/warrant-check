@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+set -eu
+
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+if [ -z "${CROSS_TEAM_CONFIG:-}" ]; then
+  if [ -f "cross-team.json" ]; then
+    export CROSS_TEAM_CONFIG="$(pwd)/cross-team.json"
+  else
+    echo "ERROR: set CROSS_TEAM_CONFIG or run from a consumer root containing cross-team.json" >&2
+    exit 2
+  fi
+fi
+
+exec python3 "$ROOT/warrant/reference/_check_frontmatter.py" "$@"

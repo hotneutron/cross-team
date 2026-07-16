@@ -1,0 +1,9 @@
+[submodule "artifact_types"]
+	path = artifact_types
+	url = https://github.com/hotneutron/artifact_types
+[submodule "parallax"]
+	path = parallax
+	url = https://github.com/hotneutron/parallax
+[submodule "warrant"]
+	path = warrant
+	url = https://github.com/hotneutron/warrant

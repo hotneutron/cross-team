@@ -1,0 +1,62 @@
+{
+  "_doc": "Copy this file to ../cross-team.json in the consumer repo root, edit it there, and commit that consumer-owned live config. Do not put live consumer config inside this bundle submodule.",
+  "version": "1.0",
+  "parallax": {
+    "partners": {},
+    "tiers": {
+      "self_name": "<consumer>",
+      "addressed": ["reaction", "cross_check", "proposal"],
+      "addressed_to_us": [],
+      "atypes": {
+        "methodology": 1,
+        "findings": 2,
+        "plan": 2,
+        "schema_plan": 2,
+        "brainstorm": 3,
+        "backlog": 3,
+        "study": 3,
+        "domain_extension": 3,
+        "strategy": 3,
+        "exercise_step": 3,
+        "exercise_plan": 3,
+        "reflection": 4,
+        "report": 4
+      },
+      "triggers": [".plan/"],
+      "contracts": [],
+      "doc_dirs": [".plan/"],
+      "promote_brainstorm": null
+    }
+  },
+  "warrant": {
+    "type_authority": {
+      "findings": "structured",
+      "exercise_step": "structured",
+      "methodology": "structured",
+      "plan": "derived",
+      "proposal": "derived",
+      "reflection": "derived",
+      "reaction": "derived",
+      "cross_check": "derived",
+      "study": "derived",
+      "brainstorm": "speculative",
+      "strategy": "speculative",
+      "schema_plan": "speculative",
+      "domain_extension": "speculative"
+    },
+    "config": {
+      "consumer_root": ".",
+      "docs_dir": ".plan",
+      "registry": "cross-team/artifact_types/artifact_types.json"
+    }
+  },
+  "_example_partner": {
+    "team-b": {
+      "path": "../team-b",
+      "team_name": "team-b",
+      "protocol_version": "2.2",
+      "last_pinned": null,
+      "last_sync": null
+    }
+  }
+}
