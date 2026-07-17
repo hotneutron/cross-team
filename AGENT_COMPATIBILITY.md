@@ -25,7 +25,7 @@ available through that runtime.
 | Agent runtime | Guide delivery target | Audit and guard target | Current status | Why included |
 |---|---|---|---|---|
 | [Claude Code](https://docs.anthropic.com/en/docs/claude-code/hooks) | Native discovery or recorded injection | `PreToolUse` and `PostToolUse` driver | `PLANNED` | Existing Parallax adapter documentation; lifecycle hooks can audit and block tool calls. |
-| [OpenAI Codex CLI](https://developers.openai.com/codex/guides/agents-md) | Native `AGENTS.md` discovery | Driver must emit normalized tool events and prove guard installation | `PLANNED` | Terminal-first coding agent with an `AGENTS.md` guide surface. |
+| [OpenAI Codex CLI](https://developers.openai.com/codex/guides/agents-md) | Native `AGENTS.md` discovery | `codex exec --json` audit plus observed `PreToolUse` guard | `PARTIAL` | One all-scenario synthetic smoke passed; two further runs and a declared model ID are required for certification. |
 | [Gemini CLI](https://geminicli.com/docs/hooks/) | Recorded injection or `GEMINI.md` bridge | `BeforeTool` and `AfterTool` driver | `PLANNED` | Terminal agent with documented tool hooks and JSON hook I/O. |
 | [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks) | Native `AGENTS.md` discovery or recorded injection | `preToolUse` and `postToolUse` driver | `PLANNED` | Terminal agent with documented lifecycle hooks that can audit and deny tool actions. |
 | [OpenCode](https://opencode.ai/docs/agents/) | Recorded injection | Poll-based watcher driver and normalized tool-event audit | `CERTIFIED` | One smoke run passed all 8 scenarios against live tools; guard enforcement is unproven. |
@@ -42,7 +42,7 @@ first, then runtimes with documented instruction and hook surfaces.
 | `scripted-fixture` | `scripted` | `n/a` | `b7e28e160875` | `scripted` | AC1-AC8 | `CERTIFIED` | The contract, scenarios, report schema, and validator catch the expected pass/fail/block cases. This is not a real-agent result. |
 | `claude-code` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
 | `opencode` | `opencode` | `deepseek-v4-pro` | `b7e28e160875` | `opencode 1.0` | AC1-AC8 PASS | `CERTIFIED` | Guide and automation compatible; 8/8 hard scenarios pass against live parallax/warrant tools. Guard enforcement remains unproven — no pre‑tool hook. |
-| `codex-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
+| `codex-cli` | `codex-cli` | `not reported` | `b7e28e160875` | `codex-cli 1.0; Codex CLI 0.144.5` | AC1-AC8 PASS (one run) | `PARTIAL` | Native guide discovery, normalized CLI JSONL audit, PreToolUse guard, and poll-based watcher surfacing were observed. Two further runs and a concrete model ID are required. |
 | `gemini-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
 | `github-copilot-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
 | `trae-agent` | `native-hooks-smoke` | `GPT-5.6-Terra` | `b7e28e160875` | `temporary-traecli-native-hooks 0.1; TRAE CLI 0.200.18` | AC1-AC6 PASS; AC7-AC8 BLOCKED | `PARTIAL` | Native `AGENTS.md` injection and terminal-action auditing were observed. AC7 timed out twice before an agent/tool event, AC8 was not run, and isolated `PreToolUse` guard execution was not observed; this is not certification. |
@@ -67,6 +67,13 @@ traces, and produced a PASS on every hard scenario. It is certified for guide
 and automation compatibility. Guard enforcement is BLOCKED: OpenCode has no
 verified before-tool hook API through which the Parallax read guard could
 intercept and deny unauthorized partner access.
+
+The Codex CLI row is a local, single-run smoke result from 2026-07-16. All 8
+synthetic scenarios passed in fresh disposable consumer/partner fixtures using
+native `AGENTS.md` discovery, `codex exec --json` audit events, and an observed
+`PreToolUse` partner-read guard. It remains `PARTIAL`: the CLI JSONL stream did
+not declare a concrete model ID and the required three completed runs have not
+yet been collected.
 
 ## Deferred Popular Runtimes
 

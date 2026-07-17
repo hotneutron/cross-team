@@ -22,10 +22,14 @@ python3 compat/run_agent_compat.py --profile scripted
 | `guide_contract.json` | Rule ID to scenario/capability mapping. |
 | `scenarios/*.json` | Synthetic compatibility scenarios AC1-AC8. |
 | `profiles/scripted.json` | Deterministic profile used by CI. |
+| `profiles/codex-cli.json` | Codex CLI capability declaration. |
+| `drivers/codex.py` | Explicit, opt-in Codex CLI guide-compatibility driver. |
+| `test_codex_driver.py` | Platform-independent tests for the Codex driver. |
 | `run_agent_compat.py` | Trace validator and report generator. |
 | `report.schema.json` | Versioned report shape. |
 | `examples/report.example.json` | Non-evidence example report. |
 | `status.json` | Sanitized profile status catalog. |
 
-Real-agent drivers belong with the relevant Parallax adapter. They should
-produce normalized JSONL traces and state JSON for this validator to consume.
+Real-agent drivers live here because they test an agent's operation under this
+bundle's `AGENTS.md`. They produce normalized JSONL traces and state JSON for
+this validator to consume; Parallax adapters retain only watcher glue.

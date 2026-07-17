@@ -76,17 +76,38 @@
     {
       "id": "codex-cli",
       "agent_runtime": "codex-cli",
-      "profile": null,
+      "profile": "codex-cli",
       "model_id": null,
-      "guide_hash": null,
-      "driver_version": null,
-      "status": "PLANNED",
+      "guide_hash": "b7e28e16087574772c628b92e743f79c43a302e31f96660142078cc180faf32b",
+      "driver_version": "codex-cli 1.0; Codex CLI 0.144.5",
+      "status": "PARTIAL",
       "classification": {
-        "guide_compatible": "BLOCKED",
-        "automation_compatible": "BLOCKED",
-        "guard_enforced": "BLOCKED"
+        "guide_compatible": "PASS",
+        "automation_compatible": "PASS",
+        "guard_enforced": "PASS"
       },
-      "latest_report": null
+      "latest_report": {
+        "kind": "real-agent-smoke",
+        "scenario_outcomes": {
+          "AC1": "PASS",
+          "AC2": "PASS",
+          "AC3": "PASS",
+          "AC4": "PASS",
+          "AC5": "PASS",
+          "AC6": "PASS",
+          "AC7": "PASS",
+          "AC8": "PASS"
+        },
+        "runs_completed": 1,
+        "guide_delivery": "native AGENTS.md",
+        "audit": "codex exec --json tool-event trace; observed PreToolUse guard",
+        "evidence": "2026-07-16 local synthetic smoke run against disposable parallax/warrant fixtures",
+        "certifies_real_agent": false,
+        "blockers": [
+          "Certification requires three completed synthetic runs.",
+          "The CLI JSONL stream did not declare a concrete model ID."
+        ]
+      }
     },
     {
       "id": "gemini-cli",
