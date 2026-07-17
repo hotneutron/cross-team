@@ -41,17 +41,37 @@
     {
       "id": "opencode",
       "agent_runtime": "opencode",
-      "profile": null,
-      "model_id": null,
-      "guide_hash": null,
-      "driver_version": null,
-      "status": "PLANNED",
+      "profile": "opencode",
+      "model_id": "deepseek-v4-pro",
+      "guide_hash": "b7e28e16087574772c628b92e743f79c43a302e31f96660142078cc180faf32b",
+      "driver_version": "opencode 1.0",
+      "status": "CERTIFIED",
       "classification": {
-        "guide_compatible": "BLOCKED",
-        "automation_compatible": "BLOCKED",
+        "guide_compatible": "PASS",
+        "automation_compatible": "PASS",
         "guard_enforced": "BLOCKED"
       },
-      "latest_report": null
+      "latest_report": {
+        "kind": "real-agent-smoke",
+        "scenario_outcomes": {
+          "AC1": "PASS",
+          "AC2": "PASS",
+          "AC3": "PASS",
+          "AC4": "PASS",
+          "AC5": "PASS",
+          "AC6": "PASS",
+          "AC7": "PASS",
+          "AC8": "PASS"
+        },
+        "runs_completed": 1,
+        "guide_delivery": "injected AGENTS.md",
+        "audit": "opencode tool-event trace (shell, edit, read, git)",
+        "evidence": "2026-07-17 local synthetic smoke run against live parallax detect/read/relay/warrant-check",
+        "certifies_real_agent": true,
+        "blockers": [
+          "guard_enforced is BLOCKED: no verified pre-tool hook; OpenCode lacks a native before-tool interception API."
+        ]
+      }
     },
     {
       "id": "codex-cli",

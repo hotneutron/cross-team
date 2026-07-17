@@ -4,8 +4,8 @@ This page tracks whether a coding-agent runtime can operate this bundle's
 [`AGENTS.md`](AGENTS.md) guide. It measures tool actions and repository state,
 not model quality or agreement with another model.
 
-No real-agent runtime is certified yet. The only current PASS is the scripted
-validator fixture, which proves the compatibility harness itself.
+OpenCode is certified for guide and automation compatibility. The scripted
+validator fixture remains the deterministic harness proof.
 
 ## Status Definitions
 
@@ -28,7 +28,7 @@ available through that runtime.
 | [OpenAI Codex CLI](https://developers.openai.com/codex/guides/agents-md) | Native `AGENTS.md` discovery | Driver must emit normalized tool events and prove guard installation | `PLANNED` | Terminal-first coding agent with an `AGENTS.md` guide surface. |
 | [Gemini CLI](https://geminicli.com/docs/hooks/) | Recorded injection or `GEMINI.md` bridge | `BeforeTool` and `AfterTool` driver | `PLANNED` | Terminal agent with documented tool hooks and JSON hook I/O. |
 | [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks) | Native `AGENTS.md` discovery or recorded injection | `preToolUse` and `postToolUse` driver | `PLANNED` | Terminal agent with documented lifecycle hooks that can audit and deny tool actions. |
-| [OpenCode](https://opencode.ai/docs/agents/) | Recorded injection | Poll-based watcher driver and normalized tool-event audit | `PLANNED` | Existing Parallax adapter documentation uses its file-poll model. |
+| [OpenCode](https://opencode.ai/docs/agents/) | Recorded injection | Poll-based watcher driver and normalized tool-event audit | `CERTIFIED` | One smoke run passed all 8 scenarios against live tools; guard enforcement is unproven. |
 | [TRAE Agent](https://docs.trae.ai/ide/agent-overview) | Verified native `AGENTS.md` discovery | TRAE CLI JSON command-event audit; guard integration remains unproven | `PARTIAL` | One synthetic smoke run passed AC1-AC6, but AC7 timed out and the project guard hook was not observed. |
 
 The first implementation order is Claude Code, OpenCode, Codex CLI, Gemini
@@ -41,7 +41,7 @@ first, then runtimes with documented instruction and hook surfaces.
 |---|---|---|---|---|---|---|---|
 | `scripted-fixture` | `scripted` | `n/a` | `b7e28e160875` | `scripted` | AC1-AC8 | `CERTIFIED` | The contract, scenarios, report schema, and validator catch the expected pass/fail/block cases. This is not a real-agent result. |
 | `claude-code` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
-| `opencode` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
+| `opencode` | `opencode` | `deepseek-v4-pro` | `b7e28e160875` | `opencode 1.0` | AC1-AC8 PASS | `CERTIFIED` | Guide and automation compatible; 8/8 hard scenarios pass against live parallax/warrant tools. Guard enforcement remains unproven — no pre‑tool hook. |
 | `codex-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
 | `gemini-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
 | `github-copilot-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
@@ -58,6 +58,15 @@ traces were deliberately retained only under `/private/tmp`; the sanitized
 scenario outcomes and blockers are recorded in `compat/status.json`. It does
 not satisfy the required three completed runs, complete AC1-AC8 coverage, or
 guard-enforcement proof.
+
+The OpenCode row is a local, single-run smoke result from 2026-07-17. All 8
+scenarios were exercised against live `parallax detect/read/relay` and
+`warrant-check` tools in a synthetic consumer+partner temp repo. The agent
+observed the guide via injected `AGENTS.md`, recorded normalized tool-event
+traces, and produced a PASS on every hard scenario. It is certified for guide
+and automation compatibility. Guard enforcement is BLOCKED: OpenCode has no
+verified before-tool hook API through which the Parallax read guard could
+intercept and deny unauthorized partner access.
 
 ## Deferred Popular Runtimes
 
