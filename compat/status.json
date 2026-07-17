@@ -1,0 +1,117 @@
+{
+  "schema_version": "1.0",
+  "kind": "agent-guide-compatibility-catalog",
+  "profiles": [
+    {
+      "id": "scripted",
+      "agent_runtime": "scripted-fixture",
+      "profile": "scripted",
+      "model_id": null,
+      "guide_hash": "b7e28e16087574772c628b92e743f79c43a302e31f96660142078cc180faf32b",
+      "driver_version": "scripted",
+      "status": "CERTIFIED",
+      "classification": {
+        "guide_compatible": "PASS",
+        "automation_compatible": "PASS",
+        "guard_enforced": "PASS"
+      },
+      "latest_report": {
+        "kind": "deterministic-validator-fixture",
+        "scenario_count": 8,
+        "runs_completed": 1,
+        "evidence": "python3 compat/run_agent_compat.py --profile scripted",
+        "certifies_real_agent": false
+      }
+    },
+    {
+      "id": "claude-code",
+      "agent_runtime": "claude-code",
+      "profile": null,
+      "model_id": null,
+      "guide_hash": null,
+      "driver_version": null,
+      "status": "PLANNED",
+      "classification": {
+        "guide_compatible": "BLOCKED",
+        "automation_compatible": "BLOCKED",
+        "guard_enforced": "BLOCKED"
+      },
+      "latest_report": null
+    },
+    {
+      "id": "opencode",
+      "agent_runtime": "opencode",
+      "profile": null,
+      "model_id": null,
+      "guide_hash": null,
+      "driver_version": null,
+      "status": "PLANNED",
+      "classification": {
+        "guide_compatible": "BLOCKED",
+        "automation_compatible": "BLOCKED",
+        "guard_enforced": "BLOCKED"
+      },
+      "latest_report": null
+    },
+    {
+      "id": "codex-cli",
+      "agent_runtime": "codex-cli",
+      "profile": null,
+      "model_id": null,
+      "guide_hash": null,
+      "driver_version": null,
+      "status": "PLANNED",
+      "classification": {
+        "guide_compatible": "BLOCKED",
+        "automation_compatible": "BLOCKED",
+        "guard_enforced": "BLOCKED"
+      },
+      "latest_report": null
+    },
+    {
+      "id": "gemini-cli",
+      "agent_runtime": "gemini-cli",
+      "profile": null,
+      "model_id": null,
+      "guide_hash": null,
+      "driver_version": null,
+      "status": "PLANNED",
+      "classification": {
+        "guide_compatible": "BLOCKED",
+        "automation_compatible": "BLOCKED",
+        "guard_enforced": "BLOCKED"
+      },
+      "latest_report": null
+    },
+    {
+      "id": "github-copilot-cli",
+      "agent_runtime": "github-copilot-cli",
+      "profile": null,
+      "model_id": null,
+      "guide_hash": null,
+      "driver_version": null,
+      "status": "PLANNED",
+      "classification": {
+        "guide_compatible": "BLOCKED",
+        "automation_compatible": "BLOCKED",
+        "guard_enforced": "BLOCKED"
+      },
+      "latest_report": null
+    },
+    {
+      "id": "trae-agent",
+      "agent_runtime": "trae-agent",
+      "profile": null,
+      "model_id": null,
+      "guide_hash": null,
+      "driver_version": null,
+      "status": "PLANNED",
+      "classification": {
+        "guide_compatible": "BLOCKED",
+        "automation_compatible": "BLOCKED",
+        "guard_enforced": "BLOCKED"
+      },
+      "latest_report": null
+    }
+  ]
+}

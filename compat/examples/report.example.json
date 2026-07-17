@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0",
+  "kind": "agent-guide-compatibility",
+  "status": "EXAMPLE_ONLY",
+  "profile": {
+    "id": "example-agent",
+    "cli_version": "0.0.0-example",
+    "model_id": null,
+    "guide_delivery": "injected"
+  },
+  "inputs": {
+    "guide": {
+      "path": "AGENTS.md",
+      "sha256": "example-only",
+      "contract_version": "1.0"
+    },
+    "bundle_commit": "example-only",
+    "driver": {
+      "id": "example-driver",
+      "version": "0.0.0-example"
+    }
+  },
+  "execution": {
+    "runs_requested": 3,
+    "runs_completed": 0,
+    "started_at": "2026-01-01T00:00:00Z",
+    "finished_at": "2026-01-01T00:00:00Z"
+  },
+  "capabilities": {
+    "tool_event_log": true,
+    "pre_tool_hook": false,
+    "background_completion": "poll"
+  },
+  "scenarios": [
+    {
+      "id": "AC1",
+      "status": "BLOCKED",
+      "reason": "example only",
+      "evidence_sha256": "example-only"
+    },
+    {
+      "id": "AC2",
+      "status": "BLOCKED",
+      "reason": "example only",
+      "evidence_sha256": "example-only"
+    },
+    {
+      "id": "AC3",
+      "status": "BLOCKED",
+      "reason": "example only",
+      "evidence_sha256": "example-only"
+    },
+    {
+      "id": "AC4",
+      "status": "BLOCKED",
+      "reason": "example only",
+      "evidence_sha256": "example-only"
+    },
+    {
+      "id": "AC5",
+      "status": "BLOCKED",
+      "reason": "example only",
+      "evidence_sha256": "example-only"
+    },
+    {
+      "id": "AC6",
+      "status": "BLOCKED",
+      "reason": "example only",
+      "evidence_sha256": "example-only"
+    },
+    {
+      "id": "AC7",
+      "status": "BLOCKED",
+      "reason": "example only",
+      "evidence_sha256": "example-only"
+    },
+    {
+      "id": "AC8",
+      "status": "BLOCKED",
+      "reason": "example only",
+      "evidence_sha256": "example-only"
+    }
+  ],
+  "classification": {
+    "guide_compatible": "BLOCKED",
+    "automation_compatible": "BLOCKED",
+    "guard_enforced": "BLOCKED"
+  },
+  "freshness": {
+    "valid_until": null,
+    "invalidated_by": ["guide hash", "driver version", "bundle commit"]
+  }
+}

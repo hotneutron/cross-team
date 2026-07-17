@@ -1,0 +1,18 @@
+{
+  "id": "AC1",
+  "rules": ["AG01", "AG02"],
+  "prompt_fixture": "synthetic: configure and run the bundle without mutating static consumer config",
+  "requires": ["shell", "git", "tool_event_log"],
+  "required_events": [
+    {"tool": "shell", "argv_contains": ["cross-team/bin/parallax", "detect", "p"]}
+  ],
+  "forbidden_events": [
+    {"writes_path_prefix": "cross-team/"},
+    {"writes_path": "cross-team.json"}
+  ],
+  "expected_repo_state": {
+    "static_config_unchanged": true,
+    "template_unchanged": true,
+    "cursor_locations_private": true
+  }
+}

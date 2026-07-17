@@ -4,8 +4,8 @@ This page tracks whether a coding-agent runtime can operate this bundle's
 [`AGENTS.md`](AGENTS.md) guide. It measures tool actions and repository state,
 not model quality or agreement with another model.
 
-No runtime is certified yet. The statuses below are release targets, not
-compatibility claims.
+No real-agent runtime is certified yet. The only current PASS is the scripted
+validator fixture, which proves the compatibility harness itself.
 
 ## Status Definitions
 
@@ -35,6 +35,24 @@ The first implementation order is Claude Code, OpenCode, Codex CLI, Gemini
 CLI, GitHub Copilot CLI, then TRAE Agent. This order uses existing adapters
 first, then runtimes with documented instruction and hook surfaces.
 
+## Tested Results
+
+| Agent runtime | Profile | Model ID | Guide hash | Driver version | Scenarios | Status | What it proves |
+|---|---|---|---|---|---|---|---|
+| `scripted-fixture` | `scripted` | `n/a` | `b7e28e16087574772c628b92e743f79c43a302e31f96660142078cc180faf32b` | `scripted` | AC1-AC8 | `CERTIFIED` | The contract, scenarios, report schema, and validator catch the expected pass/fail/block cases. This is not a real-agent result. |
+| `claude-code` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
+| `opencode` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
+| `codex-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
+| `gemini-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
+| `github-copilot-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
+| `trae-agent` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
+
+A row is only a real-agent certification when `Agent runtime`, `Profile`,
+`Model ID`, `Guide hash`, and `Driver version` identify a concrete runtime
+configuration, the status is `CERTIFIED`, and `compat/status.json` points to a
+current sanitized PASS report. The scripted row must not be used as evidence
+that any LLM runtime follows `AGENTS.md`.
+
 ## Deferred Popular Runtimes
 
 Cursor, Cline, Roo Code, and Aider are relevant candidates but are not in the
@@ -63,13 +81,21 @@ operation, or independent convergence.
 
 ## Reports And Freshness
 
-The planned `compat/status.json` will contain the latest sanitized result for
-each profile. A real result includes the guide hash, bundle commit, runtime and
-driver versions, scenario outcomes, and expiration time. Raw tool traces remain
-temporary CI artifacts and are not committed.
+[`compat/status.json`](compat/status.json) contains the sanitized status catalog
+for supported profiles. A real result includes the guide hash, bundle commit,
+runtime and driver versions, scenario outcomes, and expiration time. Raw tool
+traces remain temporary CI artifacts and are not committed.
 
 A status becomes `STALE` whenever the guide, bundle, driver, runtime version,
 model ID, or required capability changes. Re-certification requires three
 completed synthetic runs. See
 [the compatibility plan](.plan/260716-1547-plan-agent-guide-compat.md) for
 the report schema, scenario matrix, and maintenance policy.
+
+Deterministic local checks:
+
+```sh
+python3 compat/test_guide_contract.py
+python3 compat/test_validator.py
+python3 compat/run_agent_compat.py --profile scripted
+```

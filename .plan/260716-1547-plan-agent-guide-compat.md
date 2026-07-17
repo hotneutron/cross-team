@@ -8,6 +8,8 @@
 | 2026-07-16 | Add compatibility report format and maintenance lifecycle. |
 | 2026-07-16 | Add the user-facing compatibility catalog and initial release targets. |
 | 2026-07-16 | Require static consumer config and Git-private sync cursor state. |
+| 2026-07-16 | Implement deterministic guide contract, scenarios, scripted validator, and report catalog. |
+| 2026-07-16 | Clarify that real-agent compatibility means operating according to `AGENTS.md`. |
 
 ## Decision
 
@@ -24,6 +26,34 @@ surface must therefore be observable actions and repository effects:
 
 This is agent-guide compatibility and per-platform smoke testing. It is not a
 replacement for Parallax mechanism conformance, which remains agent-agnostic.
+
+## Certification Intent
+
+The compatibility suite's purpose is to test whether each real agent can operate
+according to this repository's `AGENTS.md`. A real-agent PASS means:
+
+- a specific runtime/profile/model version,
+- under a specific `AGENTS.md` hash,
+- with a declared guide-delivery path,
+- completed synthetic consumer/partner workflows,
+- while its observed tool trace and final repository state satisfied the hard
+  `AGENTS.md` rules.
+
+The unit of certification is therefore:
+
+```text
+<agent runtime> + <profile> + <model id> + <guide hash> + <driver version>
+```
+
+The suite must test the agent as an operator, not the validator. A real driver
+may deliver the guide, install audit hooks, build fixtures, and capture trace
+events, but it must not script the expected solution steps for the model. The
+scenario prompt should state the task and point at the guide; the PASS evidence
+comes from what the agent actually does.
+
+The certification remains intentionally narrow. It does not claim semantic
+quality of a reaction, permanent future compliance after model or prompt
+changes, or independent cross-team convergence.
 
 ## Existing Boundary
 
@@ -140,6 +170,26 @@ JSONL trace. The root validator only consumes this stable trace schema:
 The result records the profile ID, agent CLI version, declared model ID when
 available, guide SHA-256, scenario hash, and PASS/FAIL/BLOCKED status. Reports
 default to the temporary directory and are never committed.
+
+## Real-Agent Test Flow
+
+Each real-agent scenario follows the same black-box flow:
+
+1. Build a fresh synthetic consumer/partner fixture for one AC scenario.
+2. Deliver the exact `AGENTS.md` bytes through the profile's declared native or
+   injected guide path.
+3. Give the agent a scenario prompt that describes the task without revealing
+   the validator's expected command sequence.
+4. Capture every tool call, command, edit, exit code, and relevant filesystem
+   write into normalized JSONL.
+5. Snapshot final repository state with deterministic helper code.
+6. Validate the trace and state using `compat/run_agent_compat.py`.
+7. Discard raw traces unless retained as protected CI artifacts under the
+   report-retention policy.
+
+The validator must be able to fail the same hard rule regardless of whether the
+agent made the mistake by shell command, file edit tool, MCP tool, or platform
+native action.
 
 ## Agent Profiles And Drivers
 
@@ -341,3 +391,15 @@ scenario failed or was BLOCKED.
   final repository-state validation.
 - An agent without auditable partner access is not labeled fully compatible.
 - No test makes semantic-quality, autonomy, or independent-convergence claims.
+
+## Implementation Status
+
+- Implemented `compat/guide_contract.json`, `compat/scenarios/*.json`,
+  `compat/profiles/scripted.json`, `compat/report.schema.json`,
+  `compat/examples/report.example.json`, and `compat/status.json`.
+- Implemented `compat/run_agent_compat.py` as the scenario-scoped trace
+  validator and report generator.
+- Implemented `compat/test_guide_contract.py` and `compat/test_validator.py`.
+- Added visible `AG01`-`AG10` anchors to `AGENTS.md`.
+- Real-agent drivers remain intentionally out of scope for this bundle pass;
+  they belong with their Parallax adapters.

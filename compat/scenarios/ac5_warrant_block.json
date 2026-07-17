@@ -1,0 +1,18 @@
+{
+  "id": "AC5",
+  "rules": ["AG07", "AG08"],
+  "prompt_fixture": "synthetic: Warrant missing-parent error blocks sync advancement",
+  "requires": ["shell", "tool_event_log"],
+  "required_events": [
+    {"tool": "shell", "argv_contains": ["cross-team/bin/warrant-check"]}
+  ],
+  "forbidden_events": [
+    {"parallax_advance": true},
+    {"parallax_subcommand": "relay"},
+    {"claimed_completion": true}
+  ],
+  "expected_repo_state": {
+    "warrant_parent_missing_error": true,
+    "runtime_pin_unchanged": true
+  }
+}
