@@ -29,7 +29,7 @@ available through that runtime.
 | [Gemini CLI](https://geminicli.com/docs/hooks/) | Recorded injection or `GEMINI.md` bridge | `BeforeTool` and `AfterTool` driver | `PLANNED` | Terminal agent with documented tool hooks and JSON hook I/O. |
 | [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks) | Native `AGENTS.md` discovery or recorded injection | `preToolUse` and `postToolUse` driver | `PLANNED` | Terminal agent with documented lifecycle hooks that can audit and deny tool actions. |
 | [OpenCode](https://opencode.ai/docs/agents/) | Recorded injection | Poll-based watcher driver and normalized tool-event audit | `PLANNED` | Existing Parallax adapter documentation uses its file-poll model. |
-| [TRAE Agent](https://docs.trae.ai/ide/agent-overview) | Injected into a custom-agent prompt or verified native discovery | Driver must capture terminal/read/edit actions and prove guard integration | `PLANNED` | Widely used IDE agent with custom agents and terminal tooling. |
+| [TRAE Agent](https://docs.trae.ai/ide/agent-overview) | Verified native `AGENTS.md` discovery | TRAE CLI JSON command-event audit; guard integration remains unproven | `PARTIAL` | One synthetic smoke run passed AC1-AC6, but AC7 timed out and the project guard hook was not observed. |
 
 The first implementation order is Claude Code, OpenCode, Codex CLI, Gemini
 CLI, GitHub Copilot CLI, then TRAE Agent. This order uses existing adapters
@@ -39,19 +39,25 @@ first, then runtimes with documented instruction and hook surfaces.
 
 | Agent runtime | Profile | Model ID | Guide hash | Driver version | Scenarios | Status | What it proves |
 |---|---|---|---|---|---|---|---|
-| `scripted-fixture` | `scripted` | `n/a` | `b7e28e16087574772c628b92e743f79c43a302e31f96660142078cc180faf32b` | `scripted` | AC1-AC8 | `CERTIFIED` | The contract, scenarios, report schema, and validator catch the expected pass/fail/block cases. This is not a real-agent result. |
+| `scripted-fixture` | `scripted` | `n/a` | `b7e28e160875` | `scripted` | AC1-AC8 | `CERTIFIED` | The contract, scenarios, report schema, and validator catch the expected pass/fail/block cases. This is not a real-agent result. |
 | `claude-code` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
 | `opencode` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
 | `codex-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
 | `gemini-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
 | `github-copilot-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
-| `trae-agent` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
+| `trae-agent` | `native-hooks-smoke` | `GPT-5.6-Terra` | `b7e28e160875` | `temporary-traecli-native-hooks 0.1; TRAE CLI 0.200.18` | AC1-AC6 PASS; AC7-AC8 BLOCKED | `PARTIAL` | Native `AGENTS.md` injection and terminal-action auditing were observed. AC7 timed out twice before an agent/tool event, AC8 was not run, and isolated `PreToolUse` guard execution was not observed; this is not certification. |
 
 A row is only a real-agent certification when `Agent runtime`, `Profile`,
 `Model ID`, `Guide hash`, and `Driver version` identify a concrete runtime
 configuration, the status is `CERTIFIED`, and `compat/status.json` points to a
 current sanitized PASS report. The scripted row must not be used as evidence
 that any LLM runtime follows `AGENTS.md`.
+
+The TRAE Agent row is a local, single-run smoke result from 2026-07-16. Its raw
+traces were deliberately retained only under `/private/tmp`; the sanitized
+scenario outcomes and blockers are recorded in `compat/status.json`. It does
+not satisfy the required three completed runs, complete AC1-AC8 coverage, or
+guard-enforcement proof.
 
 ## Deferred Popular Runtimes
 
