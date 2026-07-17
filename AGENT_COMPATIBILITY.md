@@ -45,7 +45,7 @@ first, then runtimes with documented instruction and hook surfaces.
 | `codex-cli` | `codex-cli` | `not reported` | `b7e28e160875` | `codex-cli 1.0; Codex CLI 0.144.5` | AC1-AC8 PASS (one run) | `PARTIAL` | Native guide discovery, normalized CLI JSONL audit, PreToolUse guard, and poll-based watcher surfacing were observed. Two further runs and a concrete model ID are required. |
 | `gemini-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
 | `github-copilot-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
-| `trae-agent` | `native-hooks-smoke` | `GPT-5.6-Terra` | `b7e28e160875` | `temporary-traecli-native-hooks 0.1; TRAE CLI 0.200.18` | AC1-AC6 PASS; AC7-AC8 BLOCKED | `PARTIAL` | Native `AGENTS.md` injection and terminal-action auditing were observed. AC7 timed out twice before an agent/tool event, AC8 was not run, and isolated `PreToolUse` guard execution was not observed; this is not certification. |
+| `trae-agent` | `native-hooks-smoke` | `GPT-5.6-Terra` | `b7e28e160875` | `compat/drivers/trae-agent 0.1; TRAE CLI 0.200.18` | AC1-AC6 PASS; AC7-AC8 BLOCKED | `PARTIAL` | Native `AGENTS.md` injection and terminal-action auditing were observed. AC7 timed out twice before an agent/tool event, AC8 was not run, and isolated `PreToolUse` guard execution was not observed; this is not certification. |
 
 A row is only a real-agent certification when `Agent runtime`, `Profile`,
 `Model ID`, `Guide hash`, and `Driver version` identify a concrete runtime

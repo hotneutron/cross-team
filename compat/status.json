@@ -145,7 +145,7 @@
       "profile": "native-hooks-smoke",
       "model_id": "GPT-5.6-Terra",
       "guide_hash": "b7e28e16087574772c628b92e743f79c43a302e31f96660142078cc180faf32b",
-      "driver_version": "temporary-traecli-native-hooks 0.1; TRAE CLI 0.200.18",
+      "driver_version": "compat/drivers/trae-agent 0.1; TRAE CLI 0.200.18",
       "status": "PARTIAL",
       "classification": {
         "guide_compatible": "BLOCKED",

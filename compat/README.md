@@ -19,17 +19,22 @@ python3 compat/run_agent_compat.py --profile scripted
 
 | Path | Purpose |
 |---|---|
+| `drivers/<agent-id>/` | Bundle-owned real-agent certification drivers. |
 | `guide_contract.json` | Rule ID to scenario/capability mapping. |
 | `scenarios/*.json` | Synthetic compatibility scenarios AC1-AC8. |
 | `profiles/scripted.json` | Deterministic profile used by CI. |
 | `profiles/codex-cli.json` | Codex CLI capability declaration. |
+| `profiles/trae-agent.json` | TRAE Agent capability declaration. |
 | `drivers/codex.py` | Explicit, opt-in Codex CLI guide-compatibility driver. |
+| `drivers/trae-agent/` | Explicit, opt-in TRAE Agent guide-compatibility driver. |
 | `test_codex_driver.py` | Platform-independent tests for the Codex driver. |
 | `run_agent_compat.py` | Trace validator and report generator. |
 | `report.schema.json` | Versioned report shape. |
 | `examples/report.example.json` | Non-evidence example report. |
 | `status.json` | Sanitized profile status catalog. |
 
-Real-agent drivers live here because they test an agent's operation under this
-bundle's `AGENTS.md`. They produce normalized JSONL traces and state JSON for
-this validator to consume; Parallax adapters retain only watcher glue.
+Real-agent certification drivers belong in this directory because they build
+synthetic consumer/partner fixtures, deliver or verify this bundle's
+`AGENTS.md`, emit the root validator's trace/state format, and feed the
+bundle-owned compatibility catalog. Parallax adapters only own Parallax
+watcher/poll integration notes or smoke tests.

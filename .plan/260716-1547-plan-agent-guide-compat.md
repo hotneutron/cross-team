@@ -10,6 +10,7 @@
 | 2026-07-16 | Require static consumer config and Git-private sync cursor state. |
 | 2026-07-16 | Implement deterministic guide contract, scenarios, scripted validator, and report catalog. |
 | 2026-07-16 | Clarify that real-agent compatibility means operating according to `AGENTS.md`. |
+| 2026-07-17 | Correct driver ownership: bundle certification drivers live under `compat/`; Parallax adapters only own watcher integration. |
 
 ## Decision
 
@@ -62,11 +63,12 @@ changes, or independent cross-team convergence.
 
 - `parallax/conformance/` continues to prove daemon behavior without an agent
   CLI.
-- This repository owns its `AGENTS.md` contract and the generic scenario
-  validator.
-- A driver that launches or audits a particular agent belongs with that
-  agent's Parallax adapter and requires an upstream focused change and a
-  submodule bump.
+- This repository owns its `AGENTS.md` contract, synthetic certification
+  fixtures, real-agent certification drivers, generic scenario validator, and
+  compatibility catalog.
+- Parallax adapters own only Parallax watcher integration notes or smoke tests
+  for `watch` / `_inbox.json` surfacing. They do not own this bundle's
+  `AGENTS.md` certification drivers.
 - Platform tests are optional smoke tests when the CLI, authentication, and
   explicit opt-in are present. They are not universal CI gates.
 
@@ -122,6 +124,9 @@ Create the following root-owned files:
 ```text
 compat/
   README.md
+  drivers/
+    <agent-id>/
+      run_agent_compat.py
   guide_contract.json
   scenarios/
     ac1_config_owner.json
@@ -153,9 +158,11 @@ Scenario files define:
 }
 ```
 
-`run_agent_compat.py` accepts a profile and external driver. The driver creates
-the workspace, delivers the guide, invokes the agent, and writes a normalized
-JSONL trace. The root validator only consumes this stable trace schema:
+`run_agent_compat.py` accepts a profile and external driver. Bundle-owned
+drivers live under `compat/drivers/<agent-id>/`. A driver creates the
+workspace, delivers or verifies the guide, invokes the agent, and writes a
+normalized JSONL trace. The root validator only consumes this stable trace
+schema:
 
 ```json
 {
@@ -216,7 +223,8 @@ and invalid traces so `test_validator.py` proves the validator catches missing
 detect, direct partner reads, dirty relay, submodule writes, and unauthorized
 pushes. It proves the harness, not an LLM.
 
-Then add real drivers one at a time in the relevant upstream Parallax adapter:
+Then add real certification drivers one at a time under
+`compat/drivers/<agent-id>/`:
 
 1. Claude Code driver, only after confirming its tool-event and hook APIs.
 2. OpenCode driver, using the declared file-poll watcher path.
@@ -228,6 +236,10 @@ Then add real drivers one at a time in the relevant upstream Parallax adapter:
 
 Each driver has a platform-gated smoke test. Missing executable, credentials,
 or opt-in yields BLOCKED, never PASS.
+
+Parallax may separately carry agent-specific watcher/poll integration notes or
+smoke tests. Those notes are not substitutes for the bundle-owned
+certification driver.
 
 ## Execution Policy
 
@@ -295,7 +307,7 @@ Every real report contains:
   "inputs": {
     "guide": {"path": "AGENTS.md", "sha256": "hex", "contract_version": "1.0"},
     "bundle_commit": "git SHA",
-    "driver": {"id": "adapter driver", "version": "version"}
+    "driver": {"id": "compat driver", "version": "version"}
   },
   "execution": {
     "runs_requested": 3,
@@ -337,7 +349,7 @@ scenario failed or was BLOCKED.
    report schema, or the validator changes. A guide rule may not be merged
    without a scenario reference and an updated guide-contract test.
 3. Invalidate a profile's latest certification when any of these change:
-   `AGENTS.md` hash, guide-contract version, bundle commit, adapter driver
+   `AGENTS.md` hash, guide-contract version, bundle commit, compat driver
    version, agent CLI version, declared model ID, or required capability.
    Invalidated records become `STALE`, never silently remain PASS.
 4. Re-run real-agent smoke after each invalidation and at a fixed 30-day
@@ -350,10 +362,11 @@ scenario failed or was BLOCKED.
 6. Retain raw synthetic traces only as protected CI artifacts for 30 days.
    Keep failure artifacts long enough to triage, then delete them under the
    same data policy. Never retain real user prompts.
-7. Triage failures by owner: guide contract or root validator in this
-   repository; platform driver in its Parallax adapter; daemon enforcement in
-   Parallax; consumer-domain policy in the consumer repository. A failure
-   report must name the owner and remediation, not downgrade the test to PASS.
+7. Triage failures by owner: guide contract, certification driver, or root
+   validator in this repository; watcher integration in Parallax adapters;
+   daemon enforcement in Parallax; consumer-domain policy in the consumer
+   repository. A failure report must name the owner and remediation, not
+   downgrade the test to PASS.
 8. Remove a profile from `status.json` when its driver is no longer runnable
    or its certification has been stale for 90 days. Keep the profile's
    historical release note, but do not advertise it as supported.
@@ -377,9 +390,9 @@ scenario failed or was BLOCKED.
 3. Make the scripted invalid traces fail before adding any real agent driver.
 4. Add the `compat` README, `AGENT_COMPATIBILITY.md`, and CI commands for
    deterministic tests.
-5. Implement each initial-release driver in the declared order, run its
-   platform smoke and upstream conformance, push it, and bump the bundle
-   submodule.
+5. Implement each initial-release certification driver in the declared order
+   under `compat/drivers/`, then run its platform smoke. Add or update
+   Parallax adapter notes only when watcher integration changes.
 6. Add subsequent agents only through the same declared-driver protocol.
 
 ## Acceptance Criteria
@@ -401,5 +414,5 @@ scenario failed or was BLOCKED.
   validator and report generator.
 - Implemented `compat/test_guide_contract.py` and `compat/test_validator.py`.
 - Added visible `AG01`-`AG10` anchors to `AGENTS.md`.
-- Real-agent drivers remain intentionally out of scope for this bundle pass;
-  they belong with their Parallax adapters.
+- Real-agent certification drivers are bundle-owned under `compat/drivers/`.
+  Parallax adapters remain responsible only for watcher/poll integration.
