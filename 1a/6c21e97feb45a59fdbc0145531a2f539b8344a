@@ -1,0 +1,47 @@
+.plan/260716-1543-plan-cross-team-conformance.md
+  s_7b415996a3a537::t_1d5033c09eb944 1-7,10-36,39-64,71,74-97
+  s_7b415996a3a537::t_52e733bfd1532c 8,37-38,65-70,72-73
+  s_7b415996a3a537::t_81569495bd767e 9,98-113
+README.md
+  s_7b415996a3a537::t_ad7e523e9be9de 44
+  s_7b415996a3a537::t_9e901546115022 6,27-28
+  s_7b415996a3a537::t_2b79f079204804 17,40-43
+  s_7b415996a3a537::t_6e39f82db4b3e2 47
+cross-team.default.json
+  s_7b415996a3a537::t_20f76c1f1159cf 2
+.plan/260716-1547-plan-agent-guide-compat.md
+  s_7b415996a3a537::t_6a9717003412c4 10,50,55,75,77,79
+  s_7b415996a3a537::t_983b396abfe7a1 9,173-177,229-230,328-332
+  s_7b415996a3a537::t_7f23d89c8be926 1-7,11-49,51-54,56-74,76,78,80-172,178-211,310-327,333-343
+  s_7b415996a3a537::t_4540a957446f69 8,212-228,231-309
+AGENT_COMPATIBILITY.md
+  s_7b415996a3a537::t_ffa641e8a9d88e 1-49,52-53,55-75
+  s_7b415996a3a537::t_44887e644476de 50-51,54
+AGENTS.md
+  s_7b415996a3a537::t_f0b459d73a09a3 9,15-16,26-27,46-47
+  s_7b415996a3a537::t_9bf98890875f5c 17
+conformance/test_bundle.py
+  s_7b415996a3a537::t_f4f73f04bdb4ba 1-8,10-54,56-58,61-90,97-151,153-222
+  s_7b415996a3a537::t_f2c80f856b3ed8 9,55,59-60,91-96
+  s_7b415996a3a537::t_84671c15b1bee1 152
+conformance/README.md
+  s_7b415996a3a537::t_1b6b145db4a285 1-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "1a6c21e97feb45a59fdbc0145531a2f539b8344a",
+  "prompts": {},
+  "sessions": {
+    "s_7b415996a3a537": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a595c093fe2f1498891b330",
+        "model": "gpt-5.6-terra__max"
+      },
+      "human_author": "Chun Liu <chun.liu@bytedance.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
