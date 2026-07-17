@@ -13,4 +13,6 @@ python3 conformance/test_bundle.py
 The checks cover the static default configuration, initialized submodules,
 wrapper discovery, unified Parallax configuration, Warrant consumer-root
 resolution, Git-private sync cursor state, clean consumer worktrees, and
-non-mutating failure paths.
+non-mutating failure paths. It also verifies that an optional configured
+Parallax ledger remains consumer-owned rather than becoming private runtime
+state.

@@ -217,6 +217,29 @@ class BundleConformance(unittest.TestCase):
         self.assertEqual(sha256(self.config_path), self.config_hash)
         self.assertEqual(sha256(BUNDLE_ROOT / "cross-team.default.json"), self.template_hash)
 
+    def test_ct9_configured_ledger_stays_consumer_owned(self):
+        config = json.loads(self.config_path.read_text())
+        config["parallax"]["ledger_path"] = "methodology/sync_ledger.json"
+        self.config_path.write_text(json.dumps(config, indent=2) + "\n")
+        ledger_path = self.consumer / "methodology" / "sync_ledger.json"
+        ledger_path.parent.mkdir(parents=True)
+        ledger_path.write_text(json.dumps({
+            "entries": [{
+                "date": "2026-01-02",
+                "partner": "p",
+                "their_head": git(self.partner, "rev-parse", "HEAD").stdout.strip(),
+                "obligations": ["consumer-owned-ledger-obligation"],
+            }]
+        }) + "\n")
+
+        self._tool("parallax", "detect", "p")
+        prepared = self._tool("parallax", "prepare", "p")
+        summary = json.loads(self._tool("parallax", "ledger", "--recent", "1").stdout)
+
+        self.assertIn("consumer-owned-ledger-obligation", prepared.stdout)
+        self.assertEqual(summary["total_entries"], 1)
+        self.assertFalse((self._state_dir() / "sync_ledger.json").exists())
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
