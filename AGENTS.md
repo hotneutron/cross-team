@@ -6,15 +6,15 @@ Cross-team agent guide. Keep this file operational.
 - The consumer repo's `AGENTS.md` remains authoritative for local behavior,
   domain rules, and commit/push policy.
 - Tool source lives in submodules; bundle defaults and adoption docs live here.
-- Consumer live config lives outside this submodule as `cross-team.json` and is
+- Consumer static config lives outside this submodule as `cross-team.json` and is
   committed by the consumer repo.
 
 ## Setup
 
 - Copy `cross-team/cross-team.default.json` to `<consumer>/cross-team.json`.
-- Edit only consumer identity, partner paths, document roots, and pins in
-  `<consumer>/cross-team.json`.
-- Do not put live consumer config inside `cross-team/`.
+- Edit only consumer identity, partner paths, and document roots in
+  `<consumer>/cross-team.json`. Do not store sync cursors there.
+- Do not put consumer config inside `cross-team/`.
 
 ## Parallax
 
@@ -23,6 +23,8 @@ Cross-team agent guide. Keep this file operational.
 - Read partner artifacts only via `parallax read <partner> <path>`.
 - Relay only committed-clean local artifacts.
 - Advance the ledger only for a real sync.
+- Keep sync cursors and scratch in Parallax's Git-private runtime state, never
+  in `cross-team.json`.
 
 ## Warrant
 
@@ -41,6 +43,7 @@ Cross-team agent guide. Keep this file operational.
 
 ## Commit Rules
 
-- Commit `cross-team.json` in the consumer repo.
+- Commit `cross-team.json` in the consumer repo only when its static settings
+  change.
 - Do not commit generated runtime scratch, inboxes, or detect logs.
 - Push only on explicit user signal.

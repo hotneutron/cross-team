@@ -1,5 +1,5 @@
 {
-  "_doc": "Copy this file to ../cross-team.json in the consumer repo root, edit it there, and commit that consumer-owned live config. Do not put live consumer config inside this bundle submodule.",
+  "_doc": "Copy this file to ../cross-team.json in the consumer repo root, edit its static settings there, and commit that consumer-owned config. Do not put consumer config inside this bundle submodule.",
   "version": "1.0",
   "parallax": {
     "partners": {},
@@ -48,15 +48,6 @@
       "consumer_root": ".",
       "docs_dir": ".plan",
       "registry": "cross-team/artifact_types/artifact_types.json"
-    }
-  },
-  "_example_partner": {
-    "team-b": {
-      "path": "../team-b",
-      "team_name": "team-b",
-      "protocol_version": "2.2",
-      "last_pinned": null,
-      "last_sync": null
     }
   }
 }

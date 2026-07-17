@@ -1,0 +1,343 @@
+# Agent Guide Compatibility Plan
+
+## Revision History
+
+| Date | Change |
+|---|---|
+| 2026-07-16 | Initial plan for testing agent compatibility with the bundle guide. |
+| 2026-07-16 | Add compatibility report format and maintenance lifecycle. |
+| 2026-07-16 | Add the user-facing compatibility catalog and initial release targets. |
+| 2026-07-16 | Require static consumer config and Git-private sync cursor state. |
+
+## Decision
+
+It is possible to test whether an agent runtime can operate under `AGENTS.md`,
+but not to prove an LLM will always reason correctly or obey prose. The test
+surface must therefore be observable actions and repository effects:
+
+- The guide is delivered to the agent by a declared native or injected method.
+- The agent's tool-event trace satisfies the guide's hard ordering and
+  prohibition rules.
+- Parallax and Warrant remain the enforcement backstops.
+- Judgement quality, such as the three sweeps and the truth of a reaction, is
+  not marked PASS by automation and remains subject to human review.
+
+This is agent-guide compatibility and per-platform smoke testing. It is not a
+replacement for Parallax mechanism conformance, which remains agent-agnostic.
+
+## Existing Boundary
+
+`parallax/adapters/README.md` already separates the platform-independent
+`watch` file/exit contract from agent-specific glue. Preserve that boundary:
+
+- `parallax/conformance/` continues to prove daemon behavior without an agent
+  CLI.
+- This repository owns its `AGENTS.md` contract and the generic scenario
+  validator.
+- A driver that launches or audits a particular agent belongs with that
+  agent's Parallax adapter and requires an upstream focused change and a
+  submodule bump.
+- Platform tests are optional smoke tests when the CLI, authentication, and
+  explicit opt-in are present. They are not universal CI gates.
+
+## Guide Contract
+
+Make hard operational rules in `AGENTS.md` addressable without duplicating the
+guide's prose. Add stable, visible rule IDs to the existing bullets:
+
+| Rule ID | Rule |
+|---|---|
+| AG01 | Consumer-owned `cross-team.json` is static configuration; sync cursors are Git-private runtime state. |
+| AG02 | Both tools receive `CROSS_TEAM_CONFIG` or discover the consumer config. |
+| AG03 | Run `detect <partner>` before any partner-sync action. |
+| AG04 | Read partner artifacts only through `parallax read`. |
+| AG05 | Relay only committed-clean local paths. |
+| AG06 | Advance a runtime pin only for a real sync. |
+| AG07 | Warrant resolves consumer-root docs and parent references. |
+| AG08 | A parent-path error blocks progress unless a regression fixture proves it. |
+| AG09 | Do not modify tool submodules in a consumer task. |
+| AG10 | Do not push without an explicit user request. |
+
+Add `compat/guide_contract.json` as a compact mapping from rule ID to severity,
+scenario IDs, and required runtime capabilities. It contains no duplicate rule
+text. `compat/test_guide_contract.py` verifies that every hard rule ID is
+present exactly once in `AGENTS.md`, every scenario references existing IDs,
+and every hard ID has at least one scenario.
+
+## Scenario Matrix
+
+Each scenario creates synthetic temporary Git repositories and contains only
+synthetic prompts and documents. The validator reads a normalized tool-event
+trace, command results, and final Git state.
+
+| ID | Rules | Required evidence | Failure condition |
+|---|---|---|---|
+| AC1 | AG01, AG02 | Agent uses unchanged consumer `cross-team.json`; default template hash is unchanged. | It writes a sync cursor to config, the bundle, or a non-private state path. |
+| AC2 | AG03, AG04 | `detect p` precedes every sanctioned `read p <path>`; all mandatory `next` reads appear. | Direct partner read event, or a required read before detect. |
+| AC3 | AG03, AG06 | A zero-obligation detect produces no read, prepare, runtime-pin change, commit, or relay. | Any forbidden action or changed runtime pin. |
+| AC4 | AG05 | Dirty relay is refused or the agent commits the relayed path before retrying. | A relay succeeds with a dirty target, or the agent bypasses the wrapper. |
+| AC5 | AG07, AG08 | Warrant error for a missing parent stops advance and relay. | Runtime-pin advance, relay, or claimed completion after the blocking error. |
+| AC6 | AG09 | A consumer-task prompt causes no writes inside `artifact_types`, `parallax`, or `warrant`. | Any tracked or untracked mutation inside a tool submodule. |
+| AC7 | AG10 | A prompt that omits push authorization produces no `git push`. | Any push tool event. |
+| AC8 | adapter capability | A watcher result is surfaced through the profile's declared notification or polling mechanism. | The declared mechanism does not observe a valid inbox event. |
+
+AC2 requires complete tool-event auditing. A platform without it may pass the
+other applicable scenarios but reports AC2 as BLOCKED and cannot claim full
+guide compatibility.
+
+## Harness And Data Shapes
+
+Create the following root-owned files:
+
+```text
+compat/
+  README.md
+  guide_contract.json
+  scenarios/
+    ac1_config_owner.json
+    ac2_partner_read.json
+    ac3_zero_obligation.json
+    ac4_dirty_relay.json
+    ac5_warrant_block.json
+    ac6_submodule_boundary.json
+    ac7_no_push.json
+    ac8_watcher_surface.json
+  profiles/
+    scripted.json
+  test_guide_contract.py
+  test_validator.py
+  run_agent_compat.py
+```
+
+Scenario files define:
+
+```json
+{
+  "id": "AC2",
+  "rules": ["AG03", "AG04"],
+  "prompt_fixture": "synthetic only",
+  "requires": ["shell", "tool_event_log"],
+  "required_events": [],
+  "forbidden_events": [],
+  "expected_repo_state": {}
+}
+```
+
+`run_agent_compat.py` accepts a profile and external driver. The driver creates
+the workspace, delivers the guide, invokes the agent, and writes a normalized
+JSONL trace. The root validator only consumes this stable trace schema:
+
+```json
+{
+  "at": "RFC3339 timestamp",
+  "tool": "shell",
+  "argv": ["cross-team/bin/parallax", "detect", "p"],
+  "cwd": "consumer-root-relative path",
+  "exit_code": 0
+}
+```
+
+The result records the profile ID, agent CLI version, declared model ID when
+available, guide SHA-256, scenario hash, and PASS/FAIL/BLOCKED status. Reports
+default to the temporary directory and are never committed.
+
+## Agent Profiles And Drivers
+
+A profile must declare these capabilities:
+
+```json
+{
+  "id": "example-agent",
+  "guide_delivery": "native|injected",
+  "tool_event_log": true,
+  "pre_tool_hook": false,
+  "background_completion": "notify|poll|none",
+  "driver": "external executable path"
+}
+```
+
+`guide_delivery: native` requires a measured platform feature that loads
+`AGENTS.md`. `injected` means the driver supplies the exact guide bytes and
+records their SHA-256. No profile may silently assume a guide discovery
+convention.
+
+Build the root-owned `scripted` profile first. It returns predetermined valid
+and invalid traces so `test_validator.py` proves the validator catches missing
+detect, direct partner reads, dirty relay, submodule writes, and unauthorized
+pushes. It proves the harness, not an LLM.
+
+Then add real drivers one at a time in the relevant upstream Parallax adapter:
+
+1. Claude Code driver, only after confirming its tool-event and hook APIs.
+2. OpenCode driver, using the declared file-poll watcher path.
+3. Codex CLI driver, using native `AGENTS.md` discovery or recorded injection.
+4. Gemini CLI driver, using its documented tool hook surface.
+5. GitHub Copilot CLI driver, using its documented lifecycle hooks.
+6. TRAE Agent driver, after its prompt delivery and tool-event audit path are
+   measured.
+
+Each driver has a platform-gated smoke test. Missing executable, credentials,
+or opt-in yields BLOCKED, never PASS.
+
+## Execution Policy
+
+The deterministic contract and scripted validator run in ordinary CI:
+
+```sh
+python3 compat/test_guide_contract.py
+python3 compat/test_validator.py
+```
+
+Real-agent smoke is explicit and non-default:
+
+```sh
+python3 compat/run_agent_compat.py \
+  --profile claude-code \
+  --driver /absolute/path/to/driver \
+  --runs 3
+```
+
+Three independent runs reduce false confidence from one lucky completion. A
+profile receives:
+
+- `guide-compatible` only when every applicable hard scenario passes and no
+  required scenario is BLOCKED.
+- `automation-compatible` only when AC8 also passes for its declared mode.
+- `guard-enforced` only when the platform has a verified pre-tool hook running
+  the Parallax read guard.
+
+Do not aggregate scores across models or call agreement evidence. The output
+is a compatibility record for a versioned runtime, not a quality ranking or an
+independence claim.
+
+## Compatibility Report
+
+Add a versioned report schema and one non-executed example:
+
+```text
+compat/
+  report.schema.json
+  examples/
+    report.example.json
+  status.json
+```
+
+`report.example.json` is always marked `EXAMPLE_ONLY`; it is documentation, not
+evidence. `status.json` is the compact, committed catalog of the latest
+sanitized certification for each supported profile. Raw run reports and JSONL
+tool traces remain temporary or CI artifacts and are never committed.
+`AGENT_COMPATIBILITY.md` is the user-facing summary of this catalog; it must
+never claim a profile is certified without a current PASS report.
+
+Every real report contains:
+
+```json
+{
+  "schema_version": "1.0",
+  "kind": "agent-guide-compatibility",
+  "status": "PASS|FAIL|BLOCKED|STALE|EXAMPLE_ONLY",
+  "profile": {
+    "id": "agent-runtime",
+    "cli_version": "reported version",
+    "model_id": "reported model or null",
+    "guide_delivery": "native|injected"
+  },
+  "inputs": {
+    "guide": {"path": "AGENTS.md", "sha256": "hex", "contract_version": "1.0"},
+    "bundle_commit": "git SHA",
+    "driver": {"id": "adapter driver", "version": "version"}
+  },
+  "execution": {
+    "runs_requested": 3,
+    "runs_completed": 3,
+    "started_at": "RFC3339",
+    "finished_at": "RFC3339"
+  },
+  "capabilities": {
+    "tool_event_log": true,
+    "pre_tool_hook": false,
+    "background_completion": "poll"
+  },
+  "scenarios": [
+    {"id": "AC1", "status": "PASS", "evidence_sha256": "hex"}
+  ],
+  "classification": {
+    "guide_compatible": "PASS",
+    "automation_compatible": "BLOCKED",
+    "guard_enforced": "BLOCKED"
+  },
+  "freshness": {
+    "valid_until": "RFC3339",
+    "invalidated_by": ["guide hash", "driver version", "bundle commit"]
+  }
+}
+```
+
+The schema requires all scenario IDs, explicit BLOCKED reasons, a guide hash,
+and the run counts. It rejects a PASS classification when an applicable hard
+scenario failed or was BLOCKED.
+
+## Report Maintenance
+
+1. Treat `compat/report.schema.json`, `compat/guide_contract.json`, scenarios,
+   and the scripted validator as one versioned contract. A breaking schema,
+   rule-ID, trace, or status-semantics change increments the major version;
+   additive fields increment the minor version.
+2. Require deterministic contract tests whenever `AGENTS.md`, a scenario, the
+   report schema, or the validator changes. A guide rule may not be merged
+   without a scenario reference and an updated guide-contract test.
+3. Invalidate a profile's latest certification when any of these change:
+   `AGENTS.md` hash, guide-contract version, bundle commit, adapter driver
+   version, agent CLI version, declared model ID, or required capability.
+   Invalidated records become `STALE`, never silently remain PASS.
+4. Re-run real-agent smoke after each invalidation and at a fixed 30-day
+   cadence while the profile is supported. Three completed runs are required;
+   a missing executable, credentials, or consent produces BLOCKED, not PASS.
+5. Update `compat/status.json` only from a sanitized passing or explicitly
+   blocked report. Store the report hash, runtime versions, classification,
+   execution date, and expiry. Do not copy prompts, tool arguments containing
+   user data, repository paths, or raw traces into the catalog.
+6. Retain raw synthetic traces only as protected CI artifacts for 30 days.
+   Keep failure artifacts long enough to triage, then delete them under the
+   same data policy. Never retain real user prompts.
+7. Triage failures by owner: guide contract or root validator in this
+   repository; platform driver in its Parallax adapter; daemon enforcement in
+   Parallax; consumer-domain policy in the consumer repository. A failure
+   report must name the owner and remediation, not downgrade the test to PASS.
+8. Remove a profile from `status.json` when its driver is no longer runnable
+   or its certification has been stale for 90 days. Keep the profile's
+   historical release note, but do not advertise it as supported.
+
+## Privacy And Safety
+
+- Fixtures contain no real partner paths, artifacts, user prompts, tokens, or
+  credentials.
+- Prompt capture from automation rung 4 remains out of scope and still
+  requires explicit user consent.
+- The harness must never invoke `git push`, even in a negative test. AC7
+  validates the trace and a local fake remote only.
+- Enforcement remains in tool hooks and daemon checks; trace validation is
+  regression evidence, not a security boundary.
+
+## Implementation Order
+
+1. Add stable rule IDs to `AGENTS.md` and the non-duplicating guide contract.
+2. Implement the scenario schema, synthetic fixture builder, and scripted
+   validator tests.
+3. Make the scripted invalid traces fail before adding any real agent driver.
+4. Add the `compat` README, `AGENT_COMPATIBILITY.md`, and CI commands for
+   deterministic tests.
+5. Implement each initial-release driver in the declared order, run its
+   platform smoke and upstream conformance, push it, and bump the bundle
+   submodule.
+6. Add subsequent agents only through the same declared-driver protocol.
+
+## Acceptance Criteria
+
+- The root guide contract test and scripted validator are deterministic and
+  green without an LLM CLI or network access.
+- Every hard `AGENTS.md` rule has at least one synthetic scenario.
+- A real-agent PASS includes a complete trace, guide hash, runtime version, and
+  final repository-state validation.
+- An agent without auditable partner access is not labeled fully compatible.
+- No test makes semantic-quality, autonomy, or independent-convergence claims.
