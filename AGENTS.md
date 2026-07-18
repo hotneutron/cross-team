@@ -22,9 +22,13 @@ Cross-team agent guide. Keep this file operational.
 - Run `detect <partner>` before partner sync.
 - Read partner artifacts only via `parallax read <partner> <path>`.
 - Relay only committed-clean local artifacts.
-- Advance the ledger only for a real sync.
 - Keep sync cursors and scratch in Parallax's Git-private runtime state, never
   in `cross-team.json`.
+- Close a real sync with two steps, together: advance the pin, then the ledger.
+- Advance the pin: `parallax prepare <partner> --advance` — writes the
+  Git-private cursor `detect` reads.
+- Update the ledger: append one entry (partner HEAD, reads, responding
+  artifacts, open obligations) to the committed ledger at `parallax.ledger_path`.
 
 ## Warrant
 
