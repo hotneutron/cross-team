@@ -24,10 +24,13 @@ python3 compat/run_agent_compat.py --profile scripted
 | `scenarios/*.json` | Synthetic compatibility scenarios AC1-AC8. |
 | `profiles/scripted.json` | Deterministic profile used by CI. |
 | `profiles/codex-cli.json` | Codex CLI capability declaration. |
+| `profiles/claude-code.json` | Claude Code capability declaration. |
 | `profiles/trae-agent.json` | TRAE Agent capability declaration. |
 | `drivers/codex.py` | Explicit, opt-in Codex CLI guide-compatibility driver. |
+| `drivers/claude_code.py` | Explicit, opt-in Claude Code guide-compatibility driver. |
 | `drivers/trae-agent/` | Explicit, opt-in TRAE Agent guide-compatibility driver. |
 | `test_codex_driver.py` | Platform-independent tests for the Codex driver. |
+| `test_claude_driver.py` | Platform-independent tests for the Claude Code driver. |
 | `run_agent_compat.py` | Trace validator and report generator. |
 | `report.schema.json` | Versioned report shape. |
 | `examples/report.example.json` | Non-evidence example report. |
@@ -38,3 +41,18 @@ synthetic consumer/partner fixtures, deliver or verify this bundle's
 `AGENTS.md`, emit the root validator's trace/state format, and feed the
 bundle-owned compatibility catalog. Parallax adapters only own Parallax
 watcher/poll integration notes or smoke tests.
+
+Each driver measures its own guide-delivery path rather than assuming one. The
+Claude Code driver injects the exact `AGENTS.md` bytes at `CLAUDE.md`, the
+discovery path observed for its CLI version, and records the digest it
+delivered.
+
+A live smoke is opt-in and pins the model under test:
+
+```sh
+CLAUDE_AGENT_COMPAT_SMOKE=1 python3 compat/drivers/claude_code.py \
+  --profile compat/profiles/claude-code.json --out "$TMPDIR/claude-compat"
+python3 compat/run_agent_compat.py --profile claude-code \
+  --trace "$TMPDIR/claude-compat/trace.jsonl" \
+  --state "$TMPDIR/claude-compat/state.json"
+```

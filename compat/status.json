@@ -26,17 +26,42 @@
     {
       "id": "claude-code",
       "agent_runtime": "claude-code",
-      "profile": null,
-      "model_id": null,
-      "guide_hash": null,
-      "driver_version": null,
-      "status": "PLANNED",
+      "profile": "claude-code",
+      "model_id": "claude-opus-4-8",
+      "guide_hash": "b7e28e16087574772c628b92e743f79c43a302e31f96660142078cc180faf32b",
+      "driver_version": "claude-code 1.0; Claude Code 2.1.212",
+      "status": "PARTIAL",
       "classification": {
-        "guide_compatible": "BLOCKED",
-        "automation_compatible": "BLOCKED",
-        "guard_enforced": "BLOCKED"
+        "guide_compatible": "PASS",
+        "automation_compatible": "PASS",
+        "guard_enforced": "PASS"
       },
-      "latest_report": null
+      "latest_report": {
+        "kind": "real-agent-smoke",
+        "scenario_outcomes": {
+          "AC1": "PASS",
+          "AC2": "PASS",
+          "AC3": "PASS",
+          "AC4": "PASS",
+          "AC5": "PASS",
+          "AC6": "PASS",
+          "AC7": "PASS",
+          "AC8": "PASS"
+        },
+        "runs_completed": 1,
+        "guide_delivery": "injected CLAUDE.md (measured discovery path for CLI 2.1.212)",
+        "audit": "claude -p --output-format stream-json tool-event trace; observed PreToolUse guard denial of direct partner reads",
+        "evidence": "2026-07-17 local synthetic smoke run against live parallax detect/read/relay and warrant-check in disposable consumer/partner fixtures",
+        "certifies_real_agent": false,
+        "reported_models": [
+          "claude-opus-4-8",
+          "claude-haiku-4-5-20251001"
+        ],
+        "blockers": [
+          "Certification requires three completed synthetic runs; one has passed.",
+          "claude-haiku-4-5-20251001 also appears in the run's modelUsage as an auxiliary model; the model under test is pinned to claude-opus-4-8."
+        ]
+      }
     },
     {
       "id": "opencode",

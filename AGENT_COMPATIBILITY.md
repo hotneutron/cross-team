@@ -13,7 +13,7 @@ validator fixture remains the deterministic harness proof.
 |---|---|
 | `PLANNED` | Selected target; no passing compatibility report yet. |
 | `CERTIFIED` | A current report passed every applicable hard scenario. |
-| `PARTIAL` | Some scenarios passed, but a required capability is unavailable. |
+| `PARTIAL` | Scenarios passed, but a required capability, concrete model ID, or the required number of completed runs is not yet satisfied. |
 | `BLOCKED` | The runtime, credentials, or required audit capability is unavailable. |
 | `STALE` | A previously certified report was invalidated by a guide, bundle, driver, CLI, or model change. |
 
@@ -24,7 +24,7 @@ available through that runtime.
 
 | Agent runtime | Guide delivery target | Audit and guard target | Current status | Why included |
 |---|---|---|---|---|
-| [Claude Code](https://docs.anthropic.com/en/docs/claude-code/hooks) | Native discovery or recorded injection | `PreToolUse` and `PostToolUse` driver | `PLANNED` | Existing Parallax adapter documentation; lifecycle hooks can audit and block tool calls. |
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code/hooks) | Measured injection at `CLAUDE.md` | `PreToolUse` guard plus normalized `stream-json` audit | `PARTIAL` | One all-scenario synthetic smoke passed with an enforced guard and a pinned model; two further runs are required for certification. |
 | [OpenAI Codex CLI](https://developers.openai.com/codex/guides/agents-md) | Native `AGENTS.md` discovery | `codex exec --json` audit plus observed `PreToolUse` guard | `PARTIAL` | One all-scenario synthetic smoke passed; two further runs and a declared model ID are required for certification. |
 | [Gemini CLI](https://geminicli.com/docs/hooks/) | Recorded injection or `GEMINI.md` bridge | `BeforeTool` and `AfterTool` driver | `PLANNED` | Terminal agent with documented tool hooks and JSON hook I/O. |
 | [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks) | Native `AGENTS.md` discovery or recorded injection | `preToolUse` and `postToolUse` driver | `PLANNED` | Terminal agent with documented lifecycle hooks that can audit and deny tool actions. |
@@ -40,7 +40,7 @@ first, then runtimes with documented instruction and hook surfaces.
 | Agent runtime | Profile | Model ID | Guide hash | Driver version | Scenarios | Status | What it proves |
 |---|---|---|---|---|---|---|---|
 | `scripted-fixture` | `scripted` | `n/a` | `b7e28e160875` | `scripted` | AC1-AC8 | `CERTIFIED` | The contract, scenarios, report schema, and validator catch the expected pass/fail/block cases. This is not a real-agent result. |
-| `claude-code` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
+| `claude-code` | `claude-code` | `claude-opus-4-8` | `b7e28e160875` | `claude-code 1.0; Claude Code 2.1.212` | AC1-AC8 PASS (one run) | `PARTIAL` | Measured injected guide discovery at `CLAUDE.md`, normalized `stream-json` tool-event audit, and an enforced `PreToolUse` partner-read guard were observed. `claude-haiku-4-5` also appears as an auxiliary model; two further runs are required for certification. |
 | `opencode` | `opencode` | `deepseek-v4-pro` | `b7e28e160875` | `opencode 1.0` | AC1-AC8 PASS | `CERTIFIED` | Guide and automation compatible; 8/8 hard scenarios pass against live parallax/warrant tools. Guard enforcement remains unproven — no pre‑tool hook. |
 | `codex-cli` | `codex-cli` | `not reported` | `b7e28e160875` | `codex-cli 1.0; Codex CLI 0.144.5` | AC1-AC8 PASS (one run) | `PARTIAL` | Native guide discovery, normalized CLI JSONL audit, PreToolUse guard, and poll-based watcher surfacing were observed. Two further runs and a concrete model ID are required. |
 | `gemini-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
@@ -74,6 +74,16 @@ native `AGENTS.md` discovery, `codex exec --json` audit events, and an observed
 `PreToolUse` partner-read guard. It remains `PARTIAL`: the CLI JSONL stream did
 not declare a concrete model ID and the required three completed runs have not
 yet been collected.
+
+The Claude Code row is a local, single-run smoke result from 2026-07-17. All 8
+synthetic scenarios passed in fresh disposable consumer/partner fixtures. The
+guide was delivered by injecting the exact `AGENTS.md` bytes at `CLAUDE.md`, the
+discovery path measured for CLI 2.1.212, and the driver recorded the digest it
+delivered. The run pinned `claude-opus-4-8`, captured a normalized `stream-json`
+tool-event trace, and observed the `PreToolUse` guard deny direct partner reads,
+so guard enforcement is `PASS`. It remains `PARTIAL`: only one of the three
+required runs has completed, and `claude-haiku-4-5-20251001` also appears in the
+run's `modelUsage` as an auxiliary model alongside the pinned model under test.
 
 ## Deferred Popular Runtimes
 
