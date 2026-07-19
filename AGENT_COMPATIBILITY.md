@@ -7,10 +7,9 @@ not model quality or agreement with another model.
 A recorded status is immutable: it states what was achieved with the recorded
 guide hash and runtime/model/driver triplet, and no later run rewrites it. A
 record is **current** only when its coordinates match the ones below; the
-reader derives staleness by comparison. `claude-code` is certified at the
-current coordinates: three completed runs, 27/27 scenario results PASS, with
-an enforced partner-read guard. The scripted validator fixture remains the
-deterministic harness proof.
+reader derives staleness by comparison. `claude-code` and `opencode` are
+certified at the current coordinates. The scripted validator fixture remains
+the deterministic harness proof.
 
 ## Current Coordinates
 
@@ -51,7 +50,7 @@ the record's guide hash matches the current one above.
 | [OpenAI Codex CLI](https://developers.openai.com/codex/guides/agents-md) | Native `AGENTS.md` discovery | `codex exec --json` audit plus observed `PreToolUse` guard | `PARTIAL` | One all-scenario synthetic smoke passed; two further runs and a declared model ID are required for certification. |
 | [Gemini CLI](https://geminicli.com/docs/hooks/) | Recorded injection or `GEMINI.md` bridge | `BeforeTool` and `AfterTool` driver | `PLANNED` | Terminal agent with documented tool hooks and JSON hook I/O. |
 | [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks) | Native `AGENTS.md` discovery or recorded injection | `preToolUse` and `postToolUse` driver | `PLANNED` | Terminal agent with documented lifecycle hooks that can audit and deny tool actions. |
-| [OpenCode](https://opencode.ai/docs/agents/) | Recorded injection | Poll-based watcher driver and normalized tool-event audit | `CERTIFIED` | One smoke run passed all 8 scenarios against live tools under an earlier guide; the record is not current, and guard enforcement is unproven. |
+| [OpenCode](https://opencode.ai/docs/agents/) | Recorded injection | Poll-based watcher driver and normalized tool-event audit | `CERTIFIED` | Three certification runs passed AC1-AC9 at the current coordinates; guard enforcement is unproven. |
 | [TRAE Agent](https://docs.trae.ai/ide/agent-overview) | Verified native `AGENTS.md` discovery | TRAE CLI JSON command-event audit; guard integration remains unproven | `PARTIAL` | One synthetic smoke run passed AC1-AC6, but AC7 timed out and the project guard hook was not observed. |
 
 The first implementation order is Claude Code, OpenCode, Codex CLI, Gemini
@@ -64,7 +63,7 @@ first, then runtimes with documented instruction and hook surfaces.
 |---|---|---|---|---|---|---|---|
 | `scripted-fixture` | `scripted` | `n/a` | `e70d87db8e6d` | `scripted` | AC1-AC9 | `CERTIFIED` | The contract, scenarios, report schema, and validator catch the expected pass/fail/block cases. This is not a real-agent result. |
 | `claude-code` | `claude-code` | `claude-opus-4-8` | `e70d87db8e6d` | `claude-code 1.3; Claude Code 2.1.215` | 3 runs: AC1-AC9 all PASS (27/27) | `CERTIFIED` | At the current coordinates: measured injected guide discovery at `CLAUDE.md`, normalized `stream-json` audit, ledger-closed syncs, and live `PreToolUse` guard denials were observed in every run. Guard-denied exploratory partner probes were exempted by denial provenance; no partner access executed. `claude-haiku-4-5` also appears as an auxiliary model. |
-| `opencode` | `opencode` | `deepseek-v4-pro` | `b7e28e160875` | `opencode 1.0` | AC1-AC8 PASS | `CERTIFIED` | Guide and automation compatibility passed 8/8 against live parallax/warrant tools at the recorded coordinates. The guide hash predates the current guide, so the record is not current. Guard enforcement remains unproven — no pre‑tool hook. |
+| `opencode` | `opencode` | `deepseek-v4-pro` | `e70d87db8e6d` | `opencode 1.0` | 3 runs: AC1-AC9 all PASS (27/27) | `CERTIFIED` | At the current coordinates: guide and automation compatible; all 27 scenario results pass including AC9 ledger close across 3 independent disposable consumer/partner repos. Guard enforcement remains unproven — no pre‑tool hook. |
 | `codex-cli` | `codex-cli` | `not reported` | `b7e28e160875` | `codex-cli 1.0; Codex CLI 0.144.5` | AC1-AC8 PASS (one run) | `PARTIAL` | Native guide discovery, normalized CLI JSONL audit, PreToolUse guard, and poll-based watcher surfacing were observed. Two further runs and a concrete model ID are required. |
 | `gemini-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
 | `github-copilot-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
@@ -83,18 +82,16 @@ scenario outcomes and blockers are recorded in `compat/status.json`. It does
 not satisfy the required three completed runs, complete AC1-AC8 coverage, or
 guard-enforcement proof.
 
-The OpenCode row is a local, single-run smoke result from 2026-07-17. All 8
-scenarios were exercised against live `parallax detect/read/relay` and
-`warrant-check` tools in a synthetic consumer+partner temp repo. The agent
-observed the guide via injected `AGENTS.md`, recorded normalized tool-event
-traces, and produced a PASS on every hard scenario. The record stands as
-achieved at its recorded coordinates; the guide has since changed, so it is
-not current and re-certification under the current guide is required. Guard
-enforcement also remains BLOCKED: OpenCode has no verified before-tool hook
-API through which the Parallax read guard could intercept and deny
-unauthorized partner access.
+The OpenCode row is a three-run certification triple from 2026-07-19 at the
+current coordinates (contract 1.4, guide hash `e70d87db`). All 27 scenario
+results passed in fresh disposable consumer/partner repos, including the AC9
+ledger closure in each run. The guide was delivered by injected `AGENTS.md`,
+and the agent produced a normalized tool-event trace in every run. Guard
+enforcement remains BLOCKED: OpenCode has no verified before-tool hook API
+through which the Parallax read guard could intercept and deny unauthorized
+partner access.
 
-The guide hash `b7e28e160875` recorded by the OpenCode, Codex CLI, and TRAE
+The guide hash `b7e28e160875` recorded by the Codex CLI and TRAE
 rows belongs to a pre-merge state of the harness change and matches no
 committed version of `AGENTS.md`; the committed guide has since gained the
 sync close-out rules. Those rows therefore describe runs against an earlier

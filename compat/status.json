@@ -75,7 +75,7 @@
       "agent_runtime": "opencode",
       "profile": "opencode",
       "model_id": "deepseek-v4-pro",
-      "guide_hash": "b7e28e16087574772c628b92e743f79c43a302e31f96660142078cc180faf32b",
+      "guide_hash": "e70d87db8e6d8b4ffa6e3a9b39d7da544cf42ef9c22498724bff518a8b1be13d",
       "driver_version": "opencode 1.0",
       "status": "CERTIFIED",
       "classification": {
@@ -86,19 +86,20 @@
       "latest_report": {
         "kind": "real-agent-smoke",
         "scenario_outcomes": {
-          "AC1": "PASS",
-          "AC2": "PASS",
-          "AC3": "PASS",
-          "AC4": "PASS",
-          "AC5": "PASS",
-          "AC6": "PASS",
-          "AC7": "PASS",
-          "AC8": "PASS"
+          "AC1": "PASS (runs 1-3)",
+          "AC2": "PASS (runs 1-3)",
+          "AC3": "PASS (runs 1-3)",
+          "AC4": "PASS (runs 1-3)",
+          "AC5": "PASS (runs 1-3)",
+          "AC6": "PASS (runs 1-3)",
+          "AC7": "PASS (runs 1-3)",
+          "AC8": "PASS (runs 1-3)",
+          "AC9": "PASS (runs 1-3)"
         },
-        "runs_completed": 1,
+        "runs_completed": 3,
         "guide_delivery": "injected AGENTS.md",
         "audit": "opencode tool-event trace (shell, edit, read, git)",
-        "evidence": "2026-07-17 local synthetic smoke run against live parallax detect/read/relay/warrant-check",
+        "evidence": "2026-07-19 certification triple at current guide hash (contract 1.4) with 3 independent disposable consumer/partner temp repos; 27/27 scenario results PASS against live parallax and warrant-check tools. Each run exercised real detect/read/relay/warrant-check commands with real exit codes.",
         "certifies_real_agent": true,
         "blockers": [
           "guard_enforced is BLOCKED: no verified pre-tool hook; OpenCode lacks a native before-tool interception API."
