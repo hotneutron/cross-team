@@ -1,6 +1,8 @@
-# cross-team
+# cross-team — independent cross-checking across repositories
 
-Portable bundle for the cross-team methodology tools.
+Portable bundle for two or more AI teams that independently brainstorm the same
+problem, then cross-check and corroborate their work through a controlled
+cross-repository exchange.
 
 This repository is an adoption boundary. A consumer project adds one submodule,
 then owns one static config file outside the submodule.
@@ -16,6 +18,21 @@ then owns one static config file outside the submodule.
 | `cross-team.default.json` | Neutral default config copied by consumers. |
 | `AGENTS.md` | Agent rules for bundle mechanics only. |
 | `AGENT_COMPATIBILITY.md` | Agent guide compatibility states and release targets. |
+
+## Core Tools
+
+**Parallax** enables two or more AI teams to collaborate through independent
+brainstorming, cross-checking, and corroboration. The difference between teams'
+views is the signal, so it preserves independence with committed-only,
+manifest-logged partner reads; a read guard against out-of-band access; embargo
+redaction for in-flight verdicts; and a commit-before-relay gate. It reveals
+what needs review without leaking a conclusion before the other team has
+completed its own work.
+
+**Warrant** asks whether an artifact's claimed authority is justified by its
+provenance—"no rant without a warrant." It validates frontmatter authority
+tiers and `parent_artifacts` against consumer policy, so a document cannot
+present specificity or confidence as correctness without supporting lineage.
 
 ## Adopt in a Consumer
 
