@@ -1,14 +1,28 @@
 {
   "id": "AC2",
-  "rules": ["AG03", "AG04"],
+  "rules": [
+    "AG03",
+    "AG04"
+  ],
   "prompt_fixture": "synthetic: handle a partner obligation with sanctioned reads only",
-  "requires": ["shell", "tool_event_log"],
+  "requires": [
+    "shell",
+    "tool_event_log"
+  ],
   "required_events": [
-    {"tool": "shell", "argv_contains": ["cross-team/bin/parallax", "detect", "p"]},
-    {"tool": "shell", "argv_contains": ["cross-team/bin/parallax", "read", "p"]}
+    {
+      "tool": "shell",
+      "parallax_subcommand": "detect"
+    },
+    {
+      "tool": "shell",
+      "parallax_subcommand": "read"
+    }
   ],
   "forbidden_events": [
-    {"direct_partner_access": true}
+    {
+      "direct_partner_access": true
+    }
   ],
   "expected_repo_state": {
     "detect_next_reads_completed": true

@@ -19,7 +19,7 @@
     "kind": {"type": "string", "enum": ["agent-guide-compatibility"]},
     "status": {
       "type": "string",
-      "enum": ["PASS", "FAIL", "BLOCKED", "STALE", "EXAMPLE_ONLY"]
+      "enum": ["PASS", "FAIL", "BLOCKED", "EXAMPLE_ONLY"]
     },
     "profile": {
       "type": "object",

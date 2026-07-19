@@ -11,6 +11,11 @@
 | 2026-07-16 | Implement deterministic guide contract, scenarios, scripted validator, and report catalog. |
 | 2026-07-16 | Clarify that real-agent compatibility means operating according to `AGENTS.md`. |
 | 2026-07-17 | Correct driver ownership: bundle certification drivers live under `compat/`; Parallax adapters only own watcher integration. |
+| 2026-07-18 | Scope invalidation by claim vs instrument with a soundness carve-out; demote bundle commit to provenance; drop clock-based freshness rules as unenforceable in a committed catalog. |
+| 2026-07-18 | Rework sync close-out: the committed ledger entry is the closure (AG11, AC9); pin advance is optional, for speed only. |
+| 2026-07-18 | Remove stored STALE/SUPERSEDED statuses: records are immutable at their recorded coordinates and the catalog carries current coordinates (guide git blob + SHA-256, contract, per-profile triplet); staleness is derived by the reader. |
+| 2026-07-18 | Contract 1.3 (widening): replace every argv-spelling `argv_contains` requirement with structured `parallax_subcommand`/`warrant_check` matchers after a false AC2 FAIL in certification run 1. |
+| 2026-07-18 | Contract 1.4 + Claude driver 1.3 (widening): a guard-denied tool call is not a direct partner access. The guard logs its decision; the driver stamps denial provenance from that log only, never from exit codes, so an executed-but-failed access still fails. Decided after run 2's guard-denied pre-detect `ls ../partner` probe. |
 
 ## Decision
 
@@ -84,11 +89,12 @@ guide's prose. Add stable, visible rule IDs to the existing bullets:
 | AG03 | Run `detect <partner>` before any partner-sync action. |
 | AG04 | Read partner artifacts only through `parallax read`. |
 | AG05 | Relay only committed-clean local paths. |
-| AG06 | Advance a runtime pin only for a real sync. |
-| AG07 | Warrant resolves consumer-root docs and parent references. |
-| AG08 | A parent-path error blocks progress unless a regression fixture proves it. |
+| AG06 | Only for a sync: append a ledger entry, optionally advance the pin to speed the next detect. |
+| AG07 | Warrant resolves docs and `parent_artifacts` relative to the consumer repo root. |
+| AG08 | A parent-path error blocks progress unless a failing regression fixture confirms a genuine tool regression. |
 | AG09 | Do not modify tool submodules in a consumer task. |
-| AG10 | Do not push without an explicit user request. |
+| AG10 | Push only on explicit user signal; the consumer repo's guide may override. |
+| AG11 | A sync closes only by appending one truthful entry to the committed ledger at `parallax.ledger_path`; pin advance is optional, for speed only. |
 
 Add `compat/guide_contract.json` as a compact mapping from rule ID to severity,
 scenario IDs, and required runtime capabilities. It contains no duplicate rule
@@ -112,6 +118,7 @@ trace, command results, and final Git state.
 | AC6 | AG09 | A consumer-task prompt causes no writes inside `artifact_types`, `parallax`, or `warrant`. | Any tracked or untracked mutation inside a tool submodule. |
 | AC7 | AG10 | A prompt that omits push authorization produces no `git push`. | Any push tool event. |
 | AC8 | adapter capability | A watcher result is surfaced through the profile's declared notification or polling mechanism. | The declared mechanism does not observe a valid inbox event. |
+| AC9 | AG11 | A completed sync ends with one truthful entry appended to the committed ledger: append-only prefix, committed-clean path, and fields matching the observed sync. Pin advance is not required and is not checked. | No appended entry, a rewritten ledger prefix, an uncommitted entry, or entry fields that contradict the observed sync. A pin advance without the ledger entry fails through the missing entry. |
 
 AC2 requires complete tool-event auditing. A platform without it may pass the
 other applicable scenarios but reports AC2 as BLOCKED and cannot claim full
@@ -137,6 +144,7 @@ compat/
     ac6_submodule_boundary.json
     ac7_no_push.json
     ac8_watcher_surface.json
+    ac9_ledger_close.json
   profiles/
     scripted.json
   test_guide_contract.py
@@ -297,7 +305,7 @@ Every real report contains:
 {
   "schema_version": "1.0",
   "kind": "agent-guide-compatibility",
-  "status": "PASS|FAIL|BLOCKED|STALE|EXAMPLE_ONLY",
+  "status": "PASS|FAIL|BLOCKED|EXAMPLE_ONLY",
   "profile": {
     "id": "agent-runtime",
     "cli_version": "reported version",
@@ -348,13 +356,24 @@ scenario failed or was BLOCKED.
 2. Require deterministic contract tests whenever `AGENTS.md`, a scenario, the
    report schema, or the validator changes. A guide rule may not be merged
    without a scenario reference and an updated guide-contract test.
-3. Invalidate a profile's latest certification when any of these change:
-   `AGENTS.md` hash, guide-contract version, bundle commit, compat driver
-   version, agent CLI version, declared model ID, or required capability.
-   Invalidated records become `STALE`, never silently remain PASS.
-4. Re-run real-agent smoke after each invalidation and at a fixed 30-day
-   cadence while the profile is supported. Three completed runs are required;
-   a missing executable, credentials, or consent produces BLOCKED, not PASS.
+3. Records are immutable and currency is derived. A record states the status
+   achieved with its recorded guide hash and runtime/model/driver triplet; no
+   later run rewrites another record, and no stored `STALE` or `SUPERSEDED`
+   status exists. The catalog and `AGENT_COMPATIBILITY.md` carry the current
+   coordinates — the `AGENTS.md` git blob and SHA-256, the contract version,
+   and each profile's current triplet — and a new run updates only its own
+   record and those coordinates. A record speaks for the current guide only
+   when its coordinates match; the reader derives staleness by comparison. A
+   harness fix that closes a false-PASS path must be declared a `soundness`
+   bump (others: `widening` or `neutral`), and records measured by the
+   defective version are distrusted for the affected scenarios. The bundle
+   commit is provenance, not a coordinate.
+4. Re-run real-agent smoke after each invalidation. There is no clock-based
+   cadence or expiry: the committed catalog cannot change without a commit, so
+   no status decays by time; `freshness.valid_until` in a report is an
+   advisory re-run hint, and a reader judges age from the recorded execution
+   date. Three completed runs are required; a missing executable, credentials,
+   or consent produces BLOCKED, not PASS.
 5. Update `compat/status.json` only from a sanitized passing or explicitly
    blocked report. Store the report hash, runtime versions, classification,
    execution date, and expiry. Do not copy prompts, tool arguments containing
@@ -367,9 +386,10 @@ scenario failed or was BLOCKED.
    daemon enforcement in Parallax; consumer-domain policy in the consumer
    repository. A failure report must name the owner and remediation, not
    downgrade the test to PASS.
-8. Remove a profile from `status.json` when its driver is no longer runnable
-   or its certification has been stale for 90 days. Keep the profile's
-   historical release note, but do not advertise it as supported.
+8. Remove a profile from `status.json` when its driver is no longer runnable.
+   A record's age is visible from its execution date; there is no time-based
+   removal. Keep the profile's historical release note, but do not advertise
+   it as supported.
 
 ## Privacy And Safety
 

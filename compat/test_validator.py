@@ -55,6 +55,63 @@ class ValidatorTest(unittest.TestCase):
                 event["exit_code"] = 0
         self.assertEqual(self.statuses(events=events)["AC4"]["status"], "FAIL")
 
+    def test_relay_via_path_satisfies_ac4_required_event(self):
+        events = copy.deepcopy(self.events)
+        for event in events:
+            if event.get("scenario") == "AC4" and compat.is_parallax(event, "relay"):
+                event["argv"] = ["parallax", "relay", "p", "dirty.md"]
+        self.assertEqual(self.statuses(events=events)["AC4"]["status"], "PASS")
+
+    def test_missing_relay_attempt_fails_ac4(self):
+        events = [
+            event for event in self.events
+            if not (event.get("scenario") == "AC4" and compat.is_parallax(event, "relay"))
+        ]
+        self.assertEqual(self.statuses(events=events)["AC4"]["status"], "FAIL")
+
+    def test_denied_partner_access_is_exempt(self):
+        events = copy.deepcopy(self.events)
+        events.append({
+            "scenario": "AC2", "at": "2026-01-01T00:02:40Z", "tool": "shell",
+            "argv": ["ls", "-la", "../partner"], "cwd": ".", "exit_code": 1,
+            "denied": True
+        })
+        self.assertEqual(self.statuses(events=events)["AC2"]["status"], "PASS")
+
+    def test_path_invoked_wrapper_satisfies_ac2_required_events(self):
+        events = copy.deepcopy(self.events)
+        for event in events:
+            if event.get("scenario") == "AC2" and compat.is_parallax(event):
+                event["argv"] = ["parallax"] + event["argv"][1:]
+        self.assertEqual(self.statuses(events=events)["AC2"]["status"], "PASS")
+
+    def test_path_invoked_warrant_check_satisfies_ac5(self):
+        events = copy.deepcopy(self.events)
+        for event in events:
+            if event.get("scenario") == "AC5" and compat.is_warrant(event):
+                event["argv"] = ["warrant-check"]
+        self.assertEqual(self.statuses(events=events)["AC5"]["status"], "PASS")
+
+    def test_missing_ledger_entry_fails_ac9(self):
+        state = copy.deepcopy(self.state)
+        state["scenarios"]["AC9"]["ledger_entry_appended"] = False
+        self.assertEqual(self.statuses(state=state)["AC9"]["status"], "FAIL")
+
+    def test_uncommitted_ledger_entry_fails_ac9(self):
+        state = copy.deepcopy(self.state)
+        state["scenarios"]["AC9"]["ledger_committed_clean"] = False
+        self.assertEqual(self.statuses(state=state)["AC9"]["status"], "FAIL")
+
+    def test_rewritten_ledger_history_fails_ac9(self):
+        state = copy.deepcopy(self.state)
+        state["scenarios"]["AC9"]["ledger_prefix_unchanged"] = False
+        self.assertEqual(self.statuses(state=state)["AC9"]["status"], "FAIL")
+
+    def test_untruthful_ledger_entry_fails_ac9(self):
+        state = copy.deepcopy(self.state)
+        state["scenarios"]["AC9"]["ledger_entry_truthful"] = False
+        self.assertEqual(self.statuses(state=state)["AC9"]["status"], "FAIL")
+
     def test_submodule_write_fails(self):
         events = copy.deepcopy(self.events)
         events.append({

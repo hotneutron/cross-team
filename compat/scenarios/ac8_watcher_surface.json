@@ -2,13 +2,24 @@
   "id": "AC8",
   "rules": [],
   "prompt_fixture": "synthetic: watcher result is surfaced through the declared adapter mechanism",
-  "requires": ["shell", "tool_event_log", "background_completion"],
+  "requires": [
+    "shell",
+    "tool_event_log",
+    "background_completion"
+  ],
   "required_events": [
-    {"tool": "shell", "argv_contains": ["cross-team/bin/parallax", "watch", "p"]}
+    {
+      "tool": "shell",
+      "parallax_subcommand": "watch"
+    }
   ],
   "forbidden_events": [
-    {"parallax_subcommand": "relay"},
-    {"git_subcommand": "commit"}
+    {
+      "parallax_subcommand": "relay"
+    },
+    {
+      "git_subcommand": "commit"
+    }
   ],
   "expected_repo_state": {
     "inbox_observed": true

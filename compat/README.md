@@ -21,7 +21,7 @@ python3 compat/run_agent_compat.py --profile scripted
 |---|---|
 | `drivers/<agent-id>/` | Bundle-owned real-agent certification drivers. |
 | `guide_contract.json` | Rule ID to scenario/capability mapping. |
-| `scenarios/*.json` | Synthetic compatibility scenarios AC1-AC8. |
+| `scenarios/*.json` | Synthetic compatibility scenarios AC1-AC9. |
 | `profiles/scripted.json` | Deterministic profile used by CI. |
 | `profiles/codex-cli.json` | Codex CLI capability declaration. |
 | `profiles/claude-code.json` | Claude Code capability declaration. |

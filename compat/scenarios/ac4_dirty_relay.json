@@ -4,7 +4,7 @@
   "prompt_fixture": "synthetic: relay a dirty path and verify refusal or prior cleanup",
   "requires": ["shell", "tool_event_log"],
   "required_events": [
-    {"tool": "shell", "argv_contains": ["cross-team/bin/parallax", "relay", "p"]}
+    {"tool": "shell", "parallax_subcommand": "relay"}
   ],
   "forbidden_events": [
     {"dirty_relay_success": true}

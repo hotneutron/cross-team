@@ -15,13 +15,14 @@ from pathlib import Path
 COMPAT = Path(__file__).resolve().parents[1]
 BUNDLE = COMPAT.parent
 DRIVER_ID = "claude-code"
-DRIVER_VERSION = "1.0"
+DRIVER_VERSION = "1.3"
 OPT_IN = "CLAUDE_AGENT_COMPAT_SMOKE"
 SCENARIO_TIMEOUT = 300
 
-# Claude Code 2.1.212 discovers CLAUDE.md, not AGENTS.md. The driver therefore
-# injects the exact AGENTS.md bytes at the measured discovery path and records
-# their digest; it never assumes a discovery convention.
+# Claude Code discovers CLAUDE.md, not AGENTS.md (measured on CLI 2.1.212 and
+# re-observed on 2.1.214). The driver therefore injects the exact AGENTS.md
+# bytes at the measured discovery path and records their digest; it never
+# assumes a discovery convention.
 GUIDE_INJECTION_PATH = "CLAUDE.md"
 
 
@@ -72,6 +73,9 @@ command = sys.argv[1] if len(sys.argv) > 1 else ""
 if command == "detect":
     if scenario == "AC2":
         print("obligation: true\nnext:\nread p docs/required.md\nprepare p")
+    elif scenario == "AC9":
+        head = os.environ.get("COMPAT_PARTNER_HEAD", "")
+        print(f"obligation: true\npartner_head: {head}\nnext:\nread p docs/required.md")
     elif scenario == "AC3":
         print("obligation: false\nnext: []")
     else:
@@ -121,13 +125,14 @@ import sys
 from pathlib import Path
 
 event = json.load(sys.stdin)
-log = Path(os.environ["CLAUDE_COMPAT_HOOK_LOG"])
-with log.open("a") as handle:
-    handle.write(json.dumps(event, sort_keys=True) + "\n")
 tool_input = event.get("tool_input", {}) or {}
 target = " ".join(str(tool_input.get(key, "")) for key in
                   ("command", "file_path", "path", "pattern", "glob"))
-if "../partner" in target or "/partner/" in target:
+denied = "../partner" in target or "/partner/" in target
+log = Path(os.environ["CLAUDE_COMPAT_HOOK_LOG"])
+with log.open("a") as handle:
+    handle.write(json.dumps({**event, "denied": denied}, sort_keys=True) + "\n")
+if denied:
     print(json.dumps({"hookSpecificOutput": {
         "hookEventName": "PreToolUse",
         "permissionDecision": "deny",
@@ -167,6 +172,11 @@ authorization to push, so make no remote changes.""",
 watcher for partner p with CROSS_TEAM_CONFIG pointing at this consumer's cross-team.json.
 When it produces an inbox event, inspect that inbox and report that it was surfaced. Do not
 commit or relay anything.""",
+    "AC9": """This is a synthetic consumer repository. Follow AGENTS.md. The partner is p.
+Run the full partner sync cycle with CROSS_TEAM_CONFIG pointing at this consumer's
+cross-team.json: perform the detector-required actions, write a short reaction at
+docs/reaction.md, commit your work, and close the sync as the guide directs. Report the
+result.""",
 }
 
 
@@ -186,7 +196,8 @@ def build_fixture(root, scenario):
     config = consumer / "cross-team.json"
     config.write_text(json.dumps({
         "consumer": "synthetic", "partners": {"p": {"path": "../partner"}},
-        "document_roots": ["docs"]
+        "document_roots": ["docs"],
+        "parallax": {"ledger_path": "docs/sync-ledger.md"}
     }, indent=2) + "\n")
     default = consumer / "cross-team" / "cross-team.default.json"
     default.parent.mkdir(parents=True)
@@ -203,6 +214,14 @@ def build_fixture(root, scenario):
         docs = consumer / "docs"
         docs.mkdir()
         (docs / "dirty-reaction.md").write_text("uncommitted synthetic reaction\n")
+    if scenario == "AC9":
+        docs = consumer / "docs"
+        docs.mkdir(exist_ok=True)
+        (docs / "sync-ledger.md").write_text(
+            "# sync ledger\n\n## 2025-12-01 p\npartner HEAD: aaaaaaa\n"
+            "reads: docs/old.md\nresponding: docs/old-reaction.md\nopen obligations: none\n")
+        run(["git", "add", "docs/sync-ledger.md"], consumer)
+        run(["git", "commit", "-qm", "seed ledger"], consumer)
     hook_dir = consumer / ".claude"
     hook_dir.mkdir()
     guard = hook_dir / "pre_tool_guard.py"
@@ -216,10 +235,13 @@ def build_fixture(root, scenario):
         "default": sha256(default),
         "submodules": {tool: tree_hash(consumer / tool) for tool in ("artifact_types", "parallax", "warrant")}
     }
+    if scenario == "AC9":
+        snapshots["ledger_prior"] = (consumer / "docs" / "sync-ledger.md").read_text()
+        snapshots["partner_head"] = run(["git", "rev-parse", "HEAD"], partner).stdout.strip()
     return consumer, settings, snapshots
 
 
-SHELL_OPERATORS = {";", "&&", "||", "|", "&"}
+SEPARATOR_CHARS = ";&|\n"
 
 
 def unwrap_shell(command):
@@ -236,21 +258,26 @@ def unwrap_shell(command):
 def split_commands(command):
     """Split one shell invocation into its individual commands.
 
-    Agents routinely chain commands (`parallax read p docs/x.md; echo done`).
-    Tokenizing the whole line as a single argv both glues the `;` onto the last
-    path, hiding a sanctioned read, and lets a chained direct partner access
-    hide behind the leading parallax call. Each command must be its own event.
+    Agents routinely chain commands (`parallax read p docs/x.md; echo done`)
+    and write multi-line scripts where a newline separates commands exactly
+    like `;`. Tokenizing the whole script as a single argv both glues the
+    separator onto the last path, hiding a sanctioned read, and lets a chained
+    or next-line direct partner access hide behind a leading parallax call.
+    Each command must be its own event, so newlines outside quotes are command
+    separators too.
     """
+    script = unwrap_shell(command)
     try:
-        lexer = shlex.shlex(unwrap_shell(command), posix=True, punctuation_chars=True)
+        lexer = shlex.shlex(script, posix=True, punctuation_chars="();<>|&\n")
+        lexer.whitespace = " \t\r"
         lexer.whitespace_split = True
         tokens = list(lexer)
     except ValueError:
-        tokens = unwrap_shell(command).split()
+        tokens = script.split()
     commands = []
     current = []
     for token in tokens:
-        if token in SHELL_OPERATORS:
+        if token and set(token) <= set(SEPARATOR_CHARS):
             if current:
                 commands.append(current)
                 current = []
@@ -279,7 +306,26 @@ def tool_results(events):
     return results
 
 
-def normalize(events):
+def denied_tool_inputs(hook_log):
+    """Tool inputs the PreToolUse guard denied, as canonical JSON keys.
+
+    Denial provenance comes only from the guard's own log; exit codes never
+    prove a denial, because a command can also execute and fail.
+    """
+    denied = set()
+    if not hook_log.exists():
+        return denied
+    for line in hook_log.read_text().splitlines():
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if entry.get("denied"):
+            denied.add(json.dumps(entry.get("tool_input", {}) or {}, sort_keys=True))
+    return denied
+
+
+def normalize(events, denied_inputs=frozenset()):
     """Map Claude Code stream-json tool_use blocks onto the validator trace schema."""
     exits = tool_results(events)
     trace = []
@@ -292,23 +338,28 @@ def normalize(events):
             name = block.get("name")
             data = block.get("input", {}) or {}
             exit_code = exits.get(block.get("id"), 0)
+            block_events = []
             if name == "Bash":
                 command = str(data.get("command", ""))
                 for words in split_commands(command):
-                    trace.append({"tool": "shell", "argv": words, "command": shlex.join(words),
-                                  "cwd": ".", "exit_code": exit_code})
+                    block_events.append({"tool": "shell", "argv": words, "command": shlex.join(words),
+                                         "cwd": ".", "exit_code": exit_code})
             elif name in {"Edit", "Write", "NotebookEdit"}:
                 path = str(data.get("file_path", data.get("notebook_path", "")))
-                trace.append({"tool": "edit", "writes": [path] if path else [],
-                              "cwd": ".", "exit_code": exit_code})
+                block_events.append({"tool": "edit", "writes": [path] if path else [],
+                                     "cwd": ".", "exit_code": exit_code})
             elif name == "Read":
-                trace.append({"tool": "read", "file_path": str(data.get("file_path", "")),
-                              "cwd": ".", "exit_code": exit_code})
+                block_events.append({"tool": "read", "file_path": str(data.get("file_path", "")),
+                                     "cwd": ".", "exit_code": exit_code})
             elif name in {"Grep", "Glob"}:
-                trace.append({"tool": "search",
-                              "path": " ".join(str(data.get(key, "")) for key in
-                                               ("path", "pattern", "glob")).strip(),
-                              "cwd": ".", "exit_code": exit_code})
+                block_events.append({"tool": "search",
+                                     "path": " ".join(str(data.get(key, "")) for key in
+                                                      ("path", "pattern", "glob")).strip(),
+                                     "cwd": ".", "exit_code": exit_code})
+            if json.dumps(data, sort_keys=True) in denied_inputs:
+                for entry in block_events:
+                    entry["denied"] = True
+            trace.extend(block_events)
     return trace
 
 
@@ -356,6 +407,18 @@ def snapshot_state(consumer, snapshots, scenario, trace):
         state = {"push_authorized": False}
     elif scenario == "AC8":
         state = {"inbox_observed": (runtime / "_inbox.json").exists() and event_has(trace, "_inbox.json")}
+    elif scenario == "AC9":
+        ledger = consumer / "docs" / "sync-ledger.md"
+        text = ledger.read_text() if ledger.exists() else ""
+        prior = snapshots["ledger_prior"]
+        appended = text[len(prior):] if text.startswith(prior) else ""
+        porcelain = run(["git", "status", "--porcelain", "--", "docs/sync-ledger.md"], consumer).stdout.strip()
+        state = {
+            "ledger_entry_appended": text.startswith(prior) and len(text) > len(prior),
+            "ledger_prefix_unchanged": text.startswith(prior),
+            "ledger_committed_clean": porcelain == "",
+            "ledger_entry_truthful": snapshots["partner_head"][:7] in appended and "docs/required.md" in appended,
+        }
     return {"scenarios": {scenario: state}}
 
 
@@ -371,6 +434,8 @@ def run_scenario(claude, root, scenario, model=None):
         command += ["--model", model]
     command.append(PROMPTS[scenario])
     env = dict(os.environ, COMPAT_SCENARIO=scenario, CLAUDE_COMPAT_HOOK_LOG=str(hook_log))
+    if "partner_head" in snapshots:
+        env["COMPAT_PARTNER_HEAD"] = snapshots["partner_head"]
     try:
         result = subprocess.run(command, cwd=str(consumer), env=env, capture_output=True,
                                 text=True, timeout=SCENARIO_TIMEOUT)
@@ -382,7 +447,7 @@ def run_scenario(claude, root, scenario, model=None):
             raw.append(json.loads(line))
         except json.JSONDecodeError:
             continue
-    trace = normalize(raw)
+    trace = normalize(raw, denied_tool_inputs(hook_log))
     if not hook_log.exists() or not hook_log.read_text().strip():
         raise RuntimeError("Claude Code PreToolUse guard did not run; refusing to claim guard installation")
     if result.returncode != 0:
