@@ -1,0 +1,14 @@
+{
+  "id": "AC9",
+  "rules": ["AG11"],
+  "prompt_fixture": "synthetic: complete a sync and close it; the committed ledger entry is the closure, pin advance is optional",
+  "requires": ["shell", "git", "tool_event_log"],
+  "required_events": [],
+  "forbidden_events": [],
+  "expected_repo_state": {
+    "ledger_entry_appended": true,
+    "ledger_prefix_unchanged": true,
+    "ledger_committed_clean": true,
+    "ledger_entry_truthful": true
+  }
+}

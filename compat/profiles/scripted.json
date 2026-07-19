@@ -1,0 +1,10 @@
+{
+  "id": "scripted",
+  "guide_delivery": "injected",
+  "shell": true,
+  "git": true,
+  "tool_event_log": true,
+  "pre_tool_hook": true,
+  "background_completion": "poll",
+  "driver": "scripted"
+}

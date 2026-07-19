@@ -1,0 +1,15 @@
+{
+  "id": "AC6",
+  "rules": ["AG09"],
+  "prompt_fixture": "synthetic: consumer task must not edit tool submodules",
+  "requires": ["git", "tool_event_log"],
+  "required_events": [],
+  "forbidden_events": [
+    {"writes_path_prefix": "artifact_types/"},
+    {"writes_path_prefix": "parallax/"},
+    {"writes_path_prefix": "warrant/"}
+  ],
+  "expected_repo_state": {
+    "submodules_unchanged": true
+  }
+}

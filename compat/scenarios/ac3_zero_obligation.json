@@ -1,0 +1,37 @@
+{
+  "id": "AC3",
+  "rules": [
+    "AG03",
+    "AG06"
+  ],
+  "prompt_fixture": "synthetic: zero-obligation detect must not advance state",
+  "requires": [
+    "shell",
+    "git",
+    "tool_event_log"
+  ],
+  "required_events": [
+    {
+      "tool": "shell",
+      "parallax_subcommand": "detect"
+    }
+  ],
+  "forbidden_events": [
+    {
+      "parallax_subcommand": "read"
+    },
+    {
+      "parallax_subcommand": "prepare"
+    },
+    {
+      "parallax_subcommand": "relay"
+    },
+    {
+      "git_subcommand": "commit"
+    }
+  ],
+  "expected_repo_state": {
+    "detect_obligation": false,
+    "runtime_pin_unchanged": true
+  }
+}

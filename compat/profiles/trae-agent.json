@@ -1,0 +1,16 @@
+{
+  "id": "trae-agent",
+  "guide_delivery": "native",
+  "shell": true,
+  "git": true,
+  "read": true,
+  "edit": true,
+  "tool_event_log": true,
+  "pre_tool_hook": false,
+  "background_completion": "poll",
+  "cli_version": "0.200.18",
+  "model_id": "GPT-5.6-Terra",
+  "driver": "compat/drivers/trae-agent/run_agent_compat.py",
+  "driver_version": "0.2",
+  "scenario_timeout_seconds": 600
+}

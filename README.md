@@ -12,6 +12,7 @@ then owns one static config file outside the submodule.
 | `artifact_types/` | Shared artifact vocabulary registry. |
 | `parallax/` | Cross-team sync daemon. |
 | `warrant/` | Frontmatter authority checker. |
+| `compat/` | Agent guide compatibility contract and scripted validator. |
 | `cross-team.default.json` | Neutral default config copied by consumers. |
 | `AGENTS.md` | Agent rules for bundle mechanics only. |
 | `AGENT_COMPATIBILITY.md` | Agent guide compatibility states and release targets. |

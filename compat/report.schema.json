@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Agent Guide Compatibility Report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "status",
+    "profile",
+    "inputs",
+    "execution",
+    "capabilities",
+    "scenarios",
+    "classification",
+    "freshness"
+  ],
+  "properties": {
+    "schema_version": {"type": "string", "enum": ["1.0"]},
+    "kind": {"type": "string", "enum": ["agent-guide-compatibility"]},
+    "status": {
+      "type": "string",
+      "enum": ["PASS", "FAIL", "BLOCKED", "EXAMPLE_ONLY"]
+    },
+    "profile": {
+      "type": "object",
+      "required": ["id", "guide_delivery"],
+      "properties": {
+        "id": {"type": "string"},
+        "cli_version": {"type": ["string", "null"]},
+        "model_id": {"type": ["string", "null"]},
+        "guide_delivery": {"type": "string", "enum": ["native", "injected"]}
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "required": ["guide", "bundle_commit", "driver"],
+      "properties": {
+        "guide": {
+          "type": "object",
+          "required": ["path", "sha256", "contract_version"],
+          "properties": {
+            "path": {"type": "string"},
+            "sha256": {"type": "string"},
+            "contract_version": {"type": "string"}
+          }
+        },
+        "bundle_commit": {"type": "string"},
+        "driver": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": {"type": "string"},
+            "version": {"type": ["string", "null"]}
+          }
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "required": ["runs_requested", "runs_completed", "started_at", "finished_at"],
+      "properties": {
+        "runs_requested": {"type": "integer"},
+        "runs_completed": {"type": "integer"},
+        "started_at": {"type": "string"},
+        "finished_at": {"type": "string"}
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "required": ["tool_event_log", "pre_tool_hook", "background_completion"],
+      "properties": {
+        "tool_event_log": {"type": "boolean"},
+        "pre_tool_hook": {"type": "boolean"},
+        "background_completion": {"type": "string", "enum": ["notify", "poll", "none"]}
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "evidence_sha256"],
+        "properties": {
+          "id": {"type": "string"},
+          "status": {
+            "type": "string",
+            "enum": ["PASS", "FAIL", "BLOCKED"]
+          },
+          "reason": {"type": "string"},
+          "evidence_sha256": {"type": "string"}
+        }
+      }
+    },
+    "classification": {
+      "type": "object",
+      "required": ["guide_compatible", "automation_compatible", "guard_enforced"],
+      "properties": {
+        "guide_compatible": {"type": "string", "enum": ["PASS", "FAIL", "BLOCKED"]},
+        "automation_compatible": {"type": "string", "enum": ["PASS", "FAIL", "BLOCKED"]},
+        "guard_enforced": {"type": "string", "enum": ["PASS", "FAIL", "BLOCKED"]}
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "required": ["valid_until", "invalidated_by"],
+      "properties": {
+        "valid_until": {"type": ["string", "null"]},
+        "invalidated_by": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

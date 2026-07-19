@@ -1,0 +1,119 @@
+{
+  "schema_version": "1.4",
+  "rules": {
+    "AG01": {
+      "severity": "hard",
+      "scenarios": [
+        "AC1"
+      ],
+      "requires": [
+        "shell",
+        "git",
+        "tool_event_log"
+      ]
+    },
+    "AG02": {
+      "severity": "hard",
+      "scenarios": [
+        "AC1"
+      ],
+      "requires": [
+        "shell",
+        "git",
+        "tool_event_log"
+      ]
+    },
+    "AG03": {
+      "severity": "hard",
+      "scenarios": [
+        "AC2",
+        "AC3"
+      ],
+      "requires": [
+        "shell",
+        "tool_event_log"
+      ]
+    },
+    "AG04": {
+      "severity": "hard",
+      "scenarios": [
+        "AC2"
+      ],
+      "requires": [
+        "shell",
+        "tool_event_log"
+      ]
+    },
+    "AG05": {
+      "severity": "hard",
+      "scenarios": [
+        "AC4"
+      ],
+      "requires": [
+        "shell",
+        "tool_event_log"
+      ]
+    },
+    "AG06": {
+      "severity": "hard",
+      "scenarios": [
+        "AC3"
+      ],
+      "requires": [
+        "shell",
+        "git",
+        "tool_event_log"
+      ]
+    },
+    "AG07": {
+      "severity": "hard",
+      "scenarios": [
+        "AC5"
+      ],
+      "requires": [
+        "shell",
+        "tool_event_log"
+      ]
+    },
+    "AG08": {
+      "severity": "hard",
+      "scenarios": [
+        "AC5"
+      ],
+      "requires": [
+        "shell",
+        "tool_event_log"
+      ]
+    },
+    "AG09": {
+      "severity": "hard",
+      "scenarios": [
+        "AC6"
+      ],
+      "requires": [
+        "git",
+        "tool_event_log"
+      ]
+    },
+    "AG10": {
+      "severity": "hard",
+      "scenarios": [
+        "AC7"
+      ],
+      "requires": [
+        "tool_event_log"
+      ]
+    },
+    "AG11": {
+      "severity": "hard",
+      "scenarios": [
+        "AC9"
+      ],
+      "requires": [
+        "shell",
+        "git",
+        "tool_event_log"
+      ]
+    }
+  }
+}

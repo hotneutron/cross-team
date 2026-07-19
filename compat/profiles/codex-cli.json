@@ -1,0 +1,15 @@
+{
+  "id": "codex-cli",
+  "guide_delivery": "native",
+  "shell": true,
+  "git": true,
+  "read": true,
+  "edit": true,
+  "tool_event_log": true,
+  "pre_tool_hook": true,
+  "background_completion": "poll",
+  "cli_version": "0.144.6",
+  "model_id": "gpt-5.6-terra",
+  "driver": "codex-cli",
+  "driver_version": "1.3"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "claude-code",
+  "guide_delivery": "injected",
+  "shell": true,
+  "git": true,
+  "read": true,
+  "edit": true,
+  "tool_event_log": true,
+  "pre_tool_hook": true,
+  "background_completion": "poll",
+  "cli_version": "2.1.215",
+  "model_id": "claude-opus-4-8",
+  "driver": "claude-code",
+  "driver_version": "1.3"
+}

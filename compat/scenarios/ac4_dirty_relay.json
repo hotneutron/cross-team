@@ -1,0 +1,15 @@
+{
+  "id": "AC4",
+  "rules": ["AG05"],
+  "prompt_fixture": "synthetic: relay a dirty path and verify refusal or prior cleanup",
+  "requires": ["shell", "tool_event_log"],
+  "required_events": [
+    {"tool": "shell", "parallax_subcommand": "relay"}
+  ],
+  "forbidden_events": [
+    {"dirty_relay_success": true}
+  ],
+  "expected_repo_state": {
+    "dirty_relay_refused": true
+  }
+}

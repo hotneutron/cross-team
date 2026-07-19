@@ -4,36 +4,135 @@ This page tracks whether a coding-agent runtime can operate this bundle's
 [`AGENTS.md`](AGENTS.md) guide. It measures tool actions and repository state,
 not model quality or agreement with another model.
 
-No runtime is certified yet. The statuses below are release targets, not
-compatibility claims.
+A recorded status is immutable: it states what was achieved with the recorded
+guide hash and runtime/model/driver triplet, and no later run rewrites it. A
+record is **current** only when its coordinates match the ones below; the
+reader derives staleness by comparison. `claude-code` and `opencode` are
+certified at the current coordinates. The scripted validator fixture remains
+the deterministic harness proof.
+
+## Current Coordinates
+
+| What | Value |
+|---|---|
+| `AGENTS.md` git blob | `d768836d4d1020248a87e3c3736f180552e4bfc4` |
+| `AGENTS.md` SHA-256 | `e70d87db8e6d8b4ffa6e3a9b39d7da544cf42ef9c22498724bff518a8b1be13d` |
+| Contract version | `1.4` |
+
+Current per-profile triplet a new run certifies against (from
+`compat/profiles/*.json`):
+
+| Profile | Runtime version | Model ID | Driver version |
+|---|---|---|---|
+| `claude-code` | Claude Code 2.1.215 | `claude-opus-4-8` | 1.3 |
+| `codex-cli` | Codex CLI 0.144.6 | `gpt-5.6-terra` | 1.3 |
+| `opencode` | opencode 1.0 | `deepseek-v4-pro` | 1.0 |
+| `trae-agent` | TRAE CLI 0.200.18 | `GPT-5.6-Terra` | 0.2 |
 
 ## Status Definitions
 
 | Status | Meaning |
 |---|---|
 | `PLANNED` | Selected target; no passing compatibility report yet. |
-| `CERTIFIED` | A current report passed every applicable hard scenario. |
-| `PARTIAL` | Some scenarios passed, but a required capability is unavailable. |
+| `CERTIFIED` | The report passed every applicable hard scenario at its recorded coordinates. |
+| `PARTIAL` | A real-agent smoke produced evidence, but one or more certification requirements are still unmet. |
 | `BLOCKED` | The runtime, credentials, or required audit capability is unavailable. |
-| `STALE` | A previously certified report was invalidated by a guide, bundle, driver, CLI, or model change. |
 
 `CERTIFIED` is runtime- and version-specific. It does not certify every model
-available through that runtime.
+available through that runtime, and it speaks for the current guide only when
+the record's guide hash matches the current one above.
 
 ## Initial Release Targets
 
-| Agent runtime | Guide delivery target | Audit and guard target | Current status | Why included |
+| Agent runtime | Guide delivery target | Audit and guard target | Recorded status | Why included |
 |---|---|---|---|---|
-| [Claude Code](https://docs.anthropic.com/en/docs/claude-code/hooks) | Native discovery or recorded injection | `PreToolUse` and `PostToolUse` driver | `PLANNED` | Existing Parallax adapter documentation; lifecycle hooks can audit and block tool calls. |
-| [OpenAI Codex CLI](https://developers.openai.com/codex/guides/agents-md) | Native `AGENTS.md` discovery | Driver must emit normalized tool events and prove guard installation | `PLANNED` | Terminal-first coding agent with an `AGENTS.md` guide surface. |
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code/hooks) | Measured injection at `CLAUDE.md` | `PreToolUse` guard plus normalized `stream-json` audit | `CERTIFIED` | Three certification runs passed AC1-AC9 at the current coordinates with an enforced guard and a pinned model. |
+| [OpenAI Codex CLI](https://developers.openai.com/codex/guides/agents-md) | Native `AGENTS.md` discovery | `codex exec --json` audit plus observed `PreToolUse` guard | `PARTIAL` | Two current-guide full runs passed; a third failed AC9 by rewriting ledger history, so a clean three-run series is still required. |
 | [Gemini CLI](https://geminicli.com/docs/hooks/) | Recorded injection or `GEMINI.md` bridge | `BeforeTool` and `AfterTool` driver | `PLANNED` | Terminal agent with documented tool hooks and JSON hook I/O. |
 | [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks) | Native `AGENTS.md` discovery or recorded injection | `preToolUse` and `postToolUse` driver | `PLANNED` | Terminal agent with documented lifecycle hooks that can audit and deny tool actions. |
-| [OpenCode](https://opencode.ai/docs/agents/) | Recorded injection | Poll-based watcher driver and normalized tool-event audit | `PLANNED` | Existing Parallax adapter documentation uses its file-poll model. |
-| [TRAE Agent](https://docs.trae.ai/ide/agent-overview) | Injected into a custom-agent prompt or verified native discovery | Driver must capture terminal/read/edit actions and prove guard integration | `PLANNED` | Widely used IDE agent with custom agents and terminal tooling. |
+| [OpenCode](https://opencode.ai/docs/agents/) | Recorded injection | Poll-based watcher driver and normalized tool-event audit | `CERTIFIED` | Three certification runs passed AC1-AC9 at the current coordinates; guard enforcement is unproven. |
+| [TRAE Agent](https://docs.trae.ai/ide/agent-overview) | Verified native `AGENTS.md` discovery | TRAE CLI JSON command-event audit; guard integration remains unproven | `CERTIFIED` | Three current-guide full runs passed AC1-AC9; guard enforcement remains unproven. |
 
 The first implementation order is Claude Code, OpenCode, Codex CLI, Gemini
 CLI, GitHub Copilot CLI, then TRAE Agent. This order uses existing adapters
 first, then runtimes with documented instruction and hook surfaces.
+
+## Tested Results
+
+| Agent runtime | Profile | Model ID | Guide hash | Driver version | Scenarios | Status | What it proves |
+|---|---|---|---|---|---|---|---|
+| `scripted-fixture` | `scripted` | `n/a` | `e70d87db8e6d` | `scripted` | AC1-AC9 | `CERTIFIED` | The contract, scenarios, report schema, and validator catch the expected pass/fail/block cases. This is not a real-agent result. |
+| `claude-code` | `claude-code` | `claude-opus-4-8` | `e70d87db8e6d` | `claude-code 1.3; Claude Code 2.1.215` | 3 runs: AC1-AC9 all PASS (27/27) | `CERTIFIED` | At the current coordinates: measured injected guide discovery at `CLAUDE.md`, normalized `stream-json` audit, ledger-closed syncs, and live `PreToolUse` guard denials were observed in every run. Guard-denied exploratory partner probes were exempted by denial provenance; no partner access executed. `claude-haiku-4-5` also appears as an auxiliary model. |
+| `opencode` | `opencode` | `deepseek-v4-pro` | `e70d87db8e6d` | `opencode 1.0` | 3 runs: AC1-AC9 all PASS (27/27) | `CERTIFIED` | At the current coordinates: guide and automation compatible; all 27 scenario results pass including AC9 ledger close across 3 independent disposable consumer/partner repos. Guard enforcement remains unproven — no pre‑tool hook. |
+| `codex-cli` | `codex-cli` | `gpt-5.6-terra` | `e70d87db8e6d` | `codex-cli 1.2; Codex CLI 0.144.6` | Runs 1-2: AC1-AC9 PASS (18/18); run 3: AC9 FAIL | `PARTIAL` | Native guide discovery, CLI JSONL audit, PreToolUse guard, and poll-based watcher surfacing were observed. Run 3 rewrote the required ledger prefix, so it cannot certify the current runtime/model triplet; driver 1.3 fixes separate chained-command false negatives before re-run. |
+| `gemini-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
+| `github-copilot-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
+| `trae-agent` | `trae-agent` | `GPT-5.6-Terra` | `e70d87db8e6d` | `compat/drivers/trae-agent 0.2; TRAE CLI 0.200.18` | 3 runs: AC1-AC9 all PASS (27/27) | `CERTIFIED` | At the current coordinates: native `AGENTS.md` injection, TRAE CLI JSON command-event auditing, watcher surfacing, and committed AC9 ledger closure were observed in three full runs. Guard enforcement remains unproven. |
+
+A row is only a real-agent certification when `Agent runtime`, `Profile`,
+`Model ID`, `Guide hash`, and `Driver version` identify a concrete runtime
+configuration, the status is `CERTIFIED`, and `compat/status.json` records the
+sanitized PASS report. It speaks for the current guide only when its guide
+hash and triplet equal the Current Coordinates above. The scripted row must
+not be used as evidence that any LLM runtime follows `AGENTS.md`.
+
+The TRAE Agent row is a three-run certification triple from 2026-07-19 at the
+current coordinates (contract 1.4, guide hash `e70d87db`, bundle commit
+`dd603006`). Driver 0.2 adds AC9 to the default scenario set and records
+ledger-prefix, commit-clean, and truthfulness state for the configured ledger.
+Three full AC1-AC9 runs completed at `/private/tmp/trae-agent-full-run-2`,
+`/private/tmp/trae-agent-full-run-3`, and
+`/private/tmp/trae-agent-full-run-4`; all 27 scenario results passed,
+including watcher surfacing and committed AC9 ledger closure. Guard
+enforcement remains BLOCKED: the TRAE profile has no proven project
+`PreToolUse` hook through which the Parallax read guard could intercept and
+deny unauthorized partner access.
+
+The OpenCode row is a three-run certification triple from 2026-07-19 at the
+current coordinates (contract 1.4, guide hash `e70d87db`). All 27 scenario
+results passed in fresh disposable consumer/partner repos, including the AC9
+ledger closure in each run. The guide was delivered by injected `AGENTS.md`,
+and the agent produced a normalized tool-event trace in every run. Guard
+enforcement remains BLOCKED: OpenCode has no verified before-tool hook API
+through which the Parallax read guard could intercept and deny unauthorized
+partner access.
+
+The guide hash `b7e28e160875` recorded by the Codex CLI row belongs to a
+pre-merge state of the harness change and matches no committed version of
+`AGENTS.md`; the committed guide has since gained the sync close-out rules.
+That row therefore describes a run against an earlier guide and counts toward
+no current certification until re-run. The current TRAE row supersedes an
+earlier same-day TRAE smoke at that stale hash.
+
+The Codex CLI current-guide series from 2026-07-19 used Codex CLI 0.144.6 with
+the pinned `gpt-5.6-terra` model, native `AGENTS.md` discovery, `codex exec
+--json` audit events, and the observed `PreToolUse` partner-read guard. Runs 1
+and 2 passed all AC1-AC9 scenarios. Run 3 did not certify: AC9 rewrote the
+existing ledger prefix instead of appending a close-out entry, violating AG11.
+The same run exposed a driver-normalization false negative for chained relay
+and watch shell commands (AC4 and AC8); driver 1.3 splits those commands before
+validation. Codex therefore remains `PARTIAL` pending a new clean three-run
+series; the earlier stale-hash smoke is retained only as historical evidence.
+
+The Claude Code row is a three-run certification series from 2026-07-18 at
+the current coordinates (CLI 2.1.215, driver 1.3, contract 1.4, bundle commit
+613ebb1). All 27 scenario results passed in fresh disposable consumer/partner
+fixtures, including the AC9 ledger closure in each run. The guide was
+delivered by injecting the exact `AGENTS.md` bytes at `CLAUDE.md`, the
+discovery path measured for CLI 2.1.212 and re-observed through 2.1.215, and
+the driver recorded the digest it delivered. Every run pinned
+`claude-opus-4-8`, captured a normalized `stream-json` tool-event trace, and
+observed live `PreToolUse` guard denials of exploratory partner probes, so
+guard enforcement is `PASS`. Denied probes are exempted from
+direct-partner-access by denial provenance taken from the guard's own log —
+never from exit codes — and no partner access executed in any run. Caveat:
+`claude-haiku-4-5-20251001` also appears in each run's `modelUsage` as an
+auxiliary model alongside the pinned model under test. An earlier same-day
+driver-1.2 series recorded 26/27 (one guard-denied probe counted as an AC2
+FAIL under contract 1.3 semantics); the harness history — a false AC2 FAIL
+from argv-spelling specs fixed in contract 1.3, and the denial-provenance
+exemption added in contract 1.4 / driver 1.3 — is logged in the plan's
+revision history.
 
 ## Deferred Popular Runtimes
 
@@ -57,19 +156,34 @@ The compatibility suite verifies the operational rules in `AGENTS.md`:
   authorization.
 - A supported watcher mechanism surfaces an inbox event without committing or
   relaying.
+- A sync closes only through a truthful, append-only, committed ledger entry;
+  pin advance is optional and never closure.
 
 The suite does not certify semantic quality of an agent's reaction, autonomous
 operation, or independent convergence.
 
 ## Reports And Freshness
 
-The planned `compat/status.json` will contain the latest sanitized result for
-each profile. A real result includes the guide hash, bundle commit, runtime and
-driver versions, scenario outcomes, and expiration time. Raw tool traces remain
-temporary CI artifacts and are not committed.
+[`compat/status.json`](compat/status.json) contains the sanitized status catalog
+for supported profiles. A real result includes the guide hash, bundle commit,
+runtime and driver versions, scenario outcomes, and execution date. Raw tool
+traces remain temporary CI artifacts and are not committed.
 
-A status becomes `STALE` whenever the guide, bundle, driver, runtime version,
-model ID, or required capability changes. Re-certification requires three
-completed synthetic runs. See
+A recorded status is never rewritten. A run appends or replaces only its own
+profile's record and updates the Current Coordinates; the reader derives
+currency by comparing a record's guide hash and triplet to those coordinates.
+A harness fix that could have produced a false PASS must be declared as a
+`soundness` bump in the driver or contract changelog, and readers distrust
+records measured by the defective version. There is no clock-based expiry —
+judge age from the recorded execution date. Certification under the current
+guide requires three completed synthetic runs at the current coordinates. See
 [the compatibility plan](.plan/260716-1547-plan-agent-guide-compat.md) for
 the report schema, scenario matrix, and maintenance policy.
+
+Deterministic local checks:
+
+```sh
+python3 compat/test_guide_contract.py
+python3 compat/test_validator.py
+python3 compat/run_agent_compat.py --profile scripted
+```
