@@ -1,0 +1,55 @@
+.plan/260716-1547-plan-agent-guide-compat.md
+  s_bfc9642224e748::t_a83f4f319a3c04 14-18,92-94,96-97,121,147,308,359-376,389-392
+AGENT_COMPATIBILITY.md
+  s_bfc9642224e748::t_b8ca5301e0fe50 7-31,38,43-44,48,50,54,65-67,75-78,90-101,110-128,152-153,162,165-172
+compat/README.md
+  s_bfc9642224e748::t_b6e0afea6ef67a 24
+compat/drivers/claude_code.py
+  s_bfc9642224e748::t_53eb891d2f65df 18,22-25,76-78,131-135,175-179,199-200,217-224,238-240,244,261-267,269,271-272,276,280,309-328,341,345-346,349-350,352-353,355-362,410-421,437-438,450
+compat/guide_contract.json
+  s_bfc9642224e748::t_55bd461294c60b 2,6-13,17-24,28-35,39-45,49-55,59-66,70-76,80-86,90-96,100-116
+compat/profiles/claude-code.json
+  s_bfc9642224e748::t_ce9aca321a5499 11,14
+compat/report.schema.json
+  s_bfc9642224e748::t_8a458565cc227b 22
+compat/run_agent_compat.py
+  s_bfc9642224e748::t_0f274eac395157 156-160,171-175,280-288,434-438,449-451
+compat/scenarios/ac1_config_owner.json
+  s_bfc9642224e748::t_7e9f133418a6fd 3-6,8-12,14-17,20-25
+compat/scenarios/ac2_partner_read.json
+  s_bfc9642224e748::t_13d9625ca2a885 3-6,8-11,13-20,23-25
+compat/scenarios/ac3_zero_obligation.json
+  s_bfc9642224e748::t_510b0f9a703630 3-6,8-12,14-17,20-31
+compat/scenarios/ac4_dirty_relay.json
+  s_bfc9642224e748::t_a3e18312794e74 7
+compat/scenarios/ac5_warrant_block.json
+  s_bfc9642224e748::t_77d6904ad49fcf 3-6,8-11,13-16,19-27
+compat/scenarios/ac8_watcher_surface.json
+  s_bfc9642224e748::t_24a93420d49055 5-9,11-14,17-22
+compat/scenarios/ac9_ledger_close.json
+  s_bfc9642224e748::t_baf94fb23947c1 1-14
+compat/status.json
+  s_bfc9642224e748::t_b3c635b3c58387 4-8,15,25,36-38,47-55,57-58,60-61,66-69
+compat/test_claude_driver.py
+  s_bfc9642224e748::t_298eb0997d51c2 59-75,135-144,166-193,248-294
+compat/test_validator.py
+  s_bfc9642224e748::t_3711015551c56f 58-114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f3744ce18c648a6792004a7f173f452cbfa0c981",
+  "prompts": {},
+  "sessions": {
+    "s_bfc9642224e748": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f204e96c-05f3-4155-89ac-b8b2392759c3",
+        "model": "unknown"
+      },
+      "human_author": "Chun Liu <chun.liu@bytedance.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
