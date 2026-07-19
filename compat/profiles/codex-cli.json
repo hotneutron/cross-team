@@ -8,8 +8,8 @@
   "tool_event_log": true,
   "pre_tool_hook": true,
   "background_completion": "poll",
-  "cli_version": "0.144.5",
-  "model_id": null,
+  "cli_version": "0.144.6",
+  "model_id": "gpt-5.6-terra",
   "driver": "codex-cli",
-  "driver_version": "1.0"
+  "driver_version": "1.3"
 }

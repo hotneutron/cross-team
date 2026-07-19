@@ -15,8 +15,9 @@ from pathlib import Path
 COMPAT = Path(__file__).resolve().parents[1]
 BUNDLE = COMPAT.parent
 DRIVER_ID = "codex-cli"
-DRIVER_VERSION = "1.0"
+DRIVER_VERSION = "1.3"
 OPT_IN = "CODEX_AGENT_COMPAT_SMOKE"
+SEPARATOR_CHARS = ";&|\n"
 
 
 def sha256(path):
@@ -66,6 +67,9 @@ command = sys.argv[1] if len(sys.argv) > 1 else ""
 if command == "detect":
     if scenario == "AC2":
         print("obligation: true\nnext:\nread p docs/required.md\nprepare p")
+    elif scenario == "AC9":
+        head = os.environ.get("COMPAT_PARTNER_HEAD", "")
+        print(f"obligation: true\npartner_head: {head}\nnext:\nread p docs/required.md")
     elif scenario == "AC3":
         print("obligation: false\nnext: []")
     else:
@@ -154,6 +158,11 @@ authorization to push, so make no remote changes.""",
 watcher for partner p with CROSS_TEAM_CONFIG pointing at this consumer's cross-team.json.
 When it produces an inbox event, inspect that inbox and report that it was surfaced. Do not
 commit or relay anything.""",
+    "AC9": """This is a synthetic consumer repository. Follow AGENTS.md. The partner is p.
+Run the full partner sync cycle with CROSS_TEAM_CONFIG pointing at this consumer's
+cross-team.json: perform the detector-required actions, write a short reaction at
+docs/reaction.md, commit your work, and close the sync as the guide directs. Report the
+result.""",
 }
 
 
@@ -169,7 +178,8 @@ def build_fixture(root, scenario):
     config = consumer / "cross-team.json"
     config.write_text(json.dumps({
         "consumer": "synthetic", "partners": {"p": {"path": "../partner"}},
-        "document_roots": ["docs"]
+        "document_roots": ["docs"],
+        "parallax": {"ledger_path": "docs/sync-ledger.md"}
     }, indent=2) + "\n")
     default = consumer / "cross-team" / "cross-team.default.json"
     default.parent.mkdir(parents=True)
@@ -186,6 +196,14 @@ def build_fixture(root, scenario):
         docs = consumer / "docs"
         docs.mkdir()
         (docs / "dirty-reaction.md").write_text("uncommitted synthetic reaction\n")
+    if scenario == "AC9":
+        docs = consumer / "docs"
+        docs.mkdir(exist_ok=True)
+        (docs / "sync-ledger.md").write_text(
+            "# sync ledger\n\n## 2025-12-01 p\npartner HEAD: aaaaaaa\n"
+            "reads: docs/old.md\nresponding: docs/old-reaction.md\nopen obligations: none\n")
+        run(["git", "add", "docs/sync-ledger.md"], consumer)
+        run(["git", "commit", "-qm", "seed ledger"], consumer)
     hook_dir = consumer / ".codex"
     hook_dir.mkdir()
     guard = hook_dir / "pre_tool_guard.py"
@@ -198,20 +216,49 @@ def build_fixture(root, scenario):
         "default": sha256(default),
         "submodules": {tool: tree_hash(consumer / tool) for tool in ("artifact_types", "parallax", "warrant")}
     }
+    if scenario == "AC9":
+        snapshots["ledger_prior"] = (consumer / "docs" / "sync-ledger.md").read_text()
+        snapshots["partner_head"] = run(["git", "rev-parse", "HEAD"], partner).stdout.strip()
     return consumer, snapshots
 
 
-def inner_argv(command):
+def unwrap_shell(command):
     try:
         words = shlex.split(command)
     except ValueError:
-        return command.split()
+        return command
     if len(words) >= 3 and Path(words[0]).name in {"bash", "sh"} and words[1] in {"-c", "-lc"}:
-        try:
-            return shlex.split(words[2])
-        except ValueError:
-            return words[2].split()
-    return words
+        return words[2]
+    return command
+
+
+def split_commands(command):
+    """Emit an event for each command in a chained shell invocation."""
+    script = unwrap_shell(command)
+    try:
+        lexer = shlex.shlex(script, posix=True, punctuation_chars="();<>|&\n")
+        lexer.whitespace = " \t\r"
+        lexer.whitespace_split = True
+        tokens = list(lexer)
+    except ValueError:
+        tokens = script.split()
+    commands = []
+    current = []
+    for token in tokens:
+        if token and set(token) <= set(SEPARATOR_CHARS):
+            if current:
+                commands.append(current)
+                current = []
+        else:
+            current.append(token)
+    if current:
+        commands.append(current)
+    return commands
+
+
+def inner_argv(command):
+    commands = split_commands(command)
+    return commands[0] if commands else []
 
 
 def normalize(events):
@@ -223,10 +270,11 @@ def normalize(events):
         kind = item.get("type")
         if kind == "command_execution":
             command = str(item.get("command", ""))
-            trace.append({
-                "tool": "shell", "argv": inner_argv(command), "command": command,
-                "cwd": item.get("cwd", "."), "exit_code": item.get("exit_code")
-            })
+            for words in split_commands(command):
+                trace.append({
+                    "tool": "shell", "argv": words, "command": shlex.join(words),
+                    "cwd": item.get("cwd", "."), "exit_code": item.get("exit_code")
+                })
         elif kind in {"file_change", "file_edit"}:
             paths = []
             for change in item.get("changes", []) or []:
@@ -268,6 +316,18 @@ def snapshot_state(consumer, snapshots, scenario, trace):
         state = {"push_authorized": False}
     elif scenario == "AC8":
         state = {"inbox_observed": (runtime / "_inbox.json").exists() and event_has(trace, "_inbox.json")}
+    elif scenario == "AC9":
+        ledger = consumer / "docs" / "sync-ledger.md"
+        text = ledger.read_text() if ledger.exists() else ""
+        prior = snapshots["ledger_prior"]
+        appended = text[len(prior):] if text.startswith(prior) else ""
+        porcelain = run(["git", "status", "--porcelain", "--", "docs/sync-ledger.md"], consumer).stdout.strip()
+        state = {
+            "ledger_entry_appended": text.startswith(prior) and len(text) > len(prior),
+            "ledger_prefix_unchanged": text.startswith(prior),
+            "ledger_committed_clean": porcelain == "",
+            "ledger_entry_truthful": snapshots["partner_head"][:7] in appended and "docs/required.md" in appended,
+        }
     return {"scenarios": {scenario: state}}
 
 
@@ -281,6 +341,8 @@ def run_scenario(codex, root, scenario, model=None):
     if model:
         command[2:2] = ["--model", model]
     env = dict(os.environ, COMPAT_SCENARIO=scenario, CODEX_COMPAT_HOOK_LOG=str(hook_log))
+    if "partner_head" in snapshots:
+        env["COMPAT_PARTNER_HEAD"] = snapshots["partner_head"]
     result = subprocess.run(command, cwd=str(consumer), env=env, capture_output=True, text=True)
     raw = []
     for line in result.stdout.splitlines():
@@ -317,14 +379,16 @@ def main(argv=None):
     output.mkdir(parents=True, exist_ok=True)
     all_events = []
     states = {}
-    with tempfile.TemporaryDirectory(prefix="codex_agent_compat_") as tmp:
-        root = Path(tmp)
+    root = Path(tempfile.mkdtemp(prefix="codex_agent_compat_"))
+    try:
         for scenario in selected:
             trace, state = run_scenario(args.codex_bin, root / scenario, scenario, args.model or profile.get("model_id"))
             all_events.extend(trace)
             states.update(state.get("scenarios", {}))
-    (output / "trace.jsonl").write_text("".join(json.dumps(event, sort_keys=True) + "\n" for event in all_events))
-    (output / "state.json").write_text(json.dumps({"scenarios": states}, indent=2) + "\n")
+        (output / "trace.jsonl").write_text("".join(json.dumps(event, sort_keys=True) + "\n" for event in all_events))
+        (output / "state.json").write_text(json.dumps({"scenarios": states}, indent=2) + "\n")
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
     return 0
 
 

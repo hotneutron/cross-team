@@ -25,7 +25,7 @@ Current per-profile triplet a new run certifies against (from
 | Profile | Runtime version | Model ID | Driver version |
 |---|---|---|---|
 | `claude-code` | Claude Code 2.1.215 | `claude-opus-4-8` | 1.3 |
-| `codex-cli` | Codex CLI 0.144.5 | undeclared | 1.0 |
+| `codex-cli` | Codex CLI 0.144.6 | `gpt-5.6-terra` | 1.3 |
 | `opencode` | opencode 1.0 | `deepseek-v4-pro` | 1.0 |
 | `trae-agent` | TRAE CLI 0.200.18 | `GPT-5.6-Terra` | 0.2 |
 
@@ -47,7 +47,7 @@ the record's guide hash matches the current one above.
 | Agent runtime | Guide delivery target | Audit and guard target | Recorded status | Why included |
 |---|---|---|---|---|
 | [Claude Code](https://docs.anthropic.com/en/docs/claude-code/hooks) | Measured injection at `CLAUDE.md` | `PreToolUse` guard plus normalized `stream-json` audit | `CERTIFIED` | Three certification runs passed AC1-AC9 at the current coordinates with an enforced guard and a pinned model. |
-| [OpenAI Codex CLI](https://developers.openai.com/codex/guides/agents-md) | Native `AGENTS.md` discovery | `codex exec --json` audit plus observed `PreToolUse` guard | `PARTIAL` | One all-scenario synthetic smoke passed; two further runs and a declared model ID are required for certification. |
+| [OpenAI Codex CLI](https://developers.openai.com/codex/guides/agents-md) | Native `AGENTS.md` discovery | `codex exec --json` audit plus observed `PreToolUse` guard | `PARTIAL` | Two current-guide full runs passed; a third failed AC9 by rewriting ledger history, so a clean three-run series is still required. |
 | [Gemini CLI](https://geminicli.com/docs/hooks/) | Recorded injection or `GEMINI.md` bridge | `BeforeTool` and `AfterTool` driver | `PLANNED` | Terminal agent with documented tool hooks and JSON hook I/O. |
 | [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks) | Native `AGENTS.md` discovery or recorded injection | `preToolUse` and `postToolUse` driver | `PLANNED` | Terminal agent with documented lifecycle hooks that can audit and deny tool actions. |
 | [OpenCode](https://opencode.ai/docs/agents/) | Recorded injection | Poll-based watcher driver and normalized tool-event audit | `CERTIFIED` | Three certification runs passed AC1-AC9 at the current coordinates; guard enforcement is unproven. |
@@ -64,7 +64,7 @@ first, then runtimes with documented instruction and hook surfaces.
 | `scripted-fixture` | `scripted` | `n/a` | `e70d87db8e6d` | `scripted` | AC1-AC9 | `CERTIFIED` | The contract, scenarios, report schema, and validator catch the expected pass/fail/block cases. This is not a real-agent result. |
 | `claude-code` | `claude-code` | `claude-opus-4-8` | `e70d87db8e6d` | `claude-code 1.3; Claude Code 2.1.215` | 3 runs: AC1-AC9 all PASS (27/27) | `CERTIFIED` | At the current coordinates: measured injected guide discovery at `CLAUDE.md`, normalized `stream-json` audit, ledger-closed syncs, and live `PreToolUse` guard denials were observed in every run. Guard-denied exploratory partner probes were exempted by denial provenance; no partner access executed. `claude-haiku-4-5` also appears as an auxiliary model. |
 | `opencode` | `opencode` | `deepseek-v4-pro` | `e70d87db8e6d` | `opencode 1.0` | 3 runs: AC1-AC9 all PASS (27/27) | `CERTIFIED` | At the current coordinates: guide and automation compatible; all 27 scenario results pass including AC9 ledger close across 3 independent disposable consumer/partner repos. Guard enforcement remains unproven — no pre‑tool hook. |
-| `codex-cli` | `codex-cli` | `not reported` | `b7e28e160875` | `codex-cli 1.0; Codex CLI 0.144.5` | AC1-AC8 PASS (one run) | `PARTIAL` | Native guide discovery, normalized CLI JSONL audit, PreToolUse guard, and poll-based watcher surfacing were observed. Two further runs and a concrete model ID are required. |
+| `codex-cli` | `codex-cli` | `gpt-5.6-terra` | `e70d87db8e6d` | `codex-cli 1.2; Codex CLI 0.144.6` | Runs 1-2: AC1-AC9 PASS (18/18); run 3: AC9 FAIL | `PARTIAL` | Native guide discovery, CLI JSONL audit, PreToolUse guard, and poll-based watcher surfacing were observed. Run 3 rewrote the required ledger prefix, so it cannot certify the current runtime/model triplet; driver 1.3 fixes separate chained-command false negatives before re-run. |
 | `gemini-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
 | `github-copilot-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
 | `trae-agent` | `trae-agent` | `GPT-5.6-Terra` | `e70d87db8e6d` | `compat/drivers/trae-agent 0.2; TRAE CLI 0.200.18` | 3 runs: AC1-AC9 all PASS (27/27) | `CERTIFIED` | At the current coordinates: native `AGENTS.md` injection, TRAE CLI JSON command-event auditing, watcher surfacing, and committed AC9 ledger closure were observed in three full runs. Guard enforcement remains unproven. |
@@ -104,12 +104,15 @@ That row therefore describes a run against an earlier guide and counts toward
 no current certification until re-run. The current TRAE row supersedes an
 earlier same-day TRAE smoke at that stale hash.
 
-The Codex CLI row is a local, single-run smoke result from 2026-07-16. All 8
-synthetic scenarios passed in fresh disposable consumer/partner fixtures using
-native `AGENTS.md` discovery, `codex exec --json` audit events, and an observed
-`PreToolUse` partner-read guard. It remains `PARTIAL`: the CLI JSONL stream did
-not declare a concrete model ID and the required three completed runs have not
-yet been collected.
+The Codex CLI current-guide series from 2026-07-19 used Codex CLI 0.144.6 with
+the pinned `gpt-5.6-terra` model, native `AGENTS.md` discovery, `codex exec
+--json` audit events, and the observed `PreToolUse` partner-read guard. Runs 1
+and 2 passed all AC1-AC9 scenarios. Run 3 did not certify: AC9 rewrote the
+existing ledger prefix instead of appending a close-out entry, violating AG11.
+The same run exposed a driver-normalization false negative for chained relay
+and watch shell commands (AC4 and AC8); driver 1.3 splits those commands before
+validation. Codex therefore remains `PARTIAL` pending a new clean three-run
+series; the earlier stale-hash smoke is retained only as historical evidence.
 
 The Claude Code row is a three-run certification series from 2026-07-18 at
 the current coordinates (CLI 2.1.215, driver 1.3, contract 1.4, bundle commit

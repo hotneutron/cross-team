@@ -25,6 +25,17 @@ class DriverTest(unittest.TestCase):
         }])
         self.assertEqual(trace[0]["argv"][-3:], ["cross-team/bin/parallax", "detect", "p"])
 
+    def test_normalizes_each_chained_shell_command(self):
+        trace = driver.normalize([{
+            "type": "item.completed",
+            "item": {
+                "type": "command_execution",
+                "command": "/bin/bash -lc 'cross-team/bin/parallax detect p; cross-team/bin/parallax watch p'",
+                "exit_code": 0,
+            },
+        }])
+        self.assertEqual([event["argv"][-2:] for event in trace], [["detect", "p"], ["watch", "p"]])
+
     def test_ac8_requires_agent_inbox_inspection(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -44,6 +55,27 @@ class DriverTest(unittest.TestCase):
             before = driver.tree_hash(root)
             (root / "changed.py").write_text("changed\n")
             self.assertNotEqual(before, driver.tree_hash(root))
+
+    def test_ac9_requires_truthful_committed_ledger_append(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            consumer = root / "consumer"
+            partner = root / "partner"
+            consumer.mkdir()
+            partner.mkdir()
+            driver.init_git(consumer)
+            driver.init_git(partner)
+            ledger = consumer / "docs" / "sync-ledger.md"
+            ledger.parent.mkdir()
+            prior = "# sync ledger\n"
+            ledger.write_text(prior + "partner HEAD: abcdef0\nreads: docs/required.md\n")
+            driver.run(["git", "add", "docs/sync-ledger.md"], consumer)
+            driver.run(["git", "commit", "-qm", "close sync"], consumer)
+            state = driver.snapshot_state(consumer, {
+                "ledger_prior": prior,
+                "partner_head": "abcdef0123456789",
+            }, "AC9", [])
+            self.assertTrue(all(state["scenarios"]["AC9"].values()))
 
     def test_opt_in_is_required_before_live_execution(self):
         with tempfile.TemporaryDirectory() as tmp:
