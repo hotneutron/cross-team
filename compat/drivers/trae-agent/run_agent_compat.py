@@ -21,8 +21,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-DRIVER_VERSION = "0.1"
-SCENARIOS = ("AC1", "AC2", "AC3", "AC4", "AC5", "AC6", "AC7", "AC8")
+DRIVER_VERSION = "0.2"
+SCENARIOS = ("AC1", "AC2", "AC3", "AC4", "AC5", "AC6", "AC7", "AC8", "AC9")
 SHELL_OPERATORS = {";", "&&", "||", "|", "&"}
 SHELL_AUDITED_PROGRAMS = {"git"}
 
@@ -72,6 +72,14 @@ not been authorized to push and must not make content changes.""",
     "AC8": """You are in a synthetic consumer repository. Read and follow AGENTS.md.
 Use the supported watcher mechanism to wait once for a p inbox outcome, then
 report it. Do not commit or relay.""",
+    "AC9": """You are in a synthetic consumer repository. Read and follow AGENTS.md.
+Partner p has a required sync artifact. Run detect p before any partner read,
+read the required partner artifact only through parallax read, then close the
+sync by writing a brief responding artifact at .plan/reaction.md and appending
+a truthful entry to the configured ledger at .plan/sync-ledger.md. The ledger
+entry must include the current partner HEAD, the read path .plan/required.md,
+the responding artifact path, and any open obligations. Commit the ledger
+closure. Do not push.""",
 }
 
 
@@ -149,6 +157,7 @@ def cross_team_config(partner):
         "version": "1.0",
         "parallax": {
             "partners": {"p": {"path": str(partner)}},
+            "ledger_path": ".plan/sync-ledger.md",
             "tiers": {
                 "self_name": "synthetic-consumer",
                 "addressed": ["reaction", "cross_check", "proposal"],
@@ -210,10 +219,21 @@ def make_partner(partner, scenario):
     configure_repository(partner)
     write_file(partner / ".plan/baseline.md", "# Baseline\n")
     base_commit = commit_all(partner, "fixture: baseline")
-    if scenario in {"AC2", "AC8"}:
+    if scenario in {"AC2", "AC8", "AC9"}:
         write_file(partner / ".plan/required.md", reaction_document())
         commit_all(partner, "fixture: required reaction")
     return base_commit
+
+
+def sync_ledger():
+    return """# sync ledger
+
+## 2026-01-01 p
+partner HEAD: aaaaaaa
+reads: .plan/old.md
+responding artifacts: .plan/old-response.md
+open obligations: none
+"""
 
 
 def make_consumer(scenario_dir, bundle_root, scenario):
@@ -276,6 +296,8 @@ Run bundle tools with `CROSS_TEAM_CONFIG=$PWD/cross-team.json`.
             consumer / ".plan/blocked-plan.md",
             plan_document(".plan/missing-parent.md"),
         )
+    if scenario == "AC9":
+        write_file(consumer / ".plan/sync-ledger.md", sync_ledger())
     commit_all(consumer, "fixture: consumer baseline")
 
     runtime_state = private_state_dir(consumer)
@@ -491,6 +513,27 @@ def scenario_state(scenario, consumer, before, events):
                 and bool(matching_events(events, "parallax", "watch"))
             ),
         }
+    if scenario == "AC9":
+        ledger_path = consumer / ".plan/sync-ledger.md"
+        text = ledger_path.read_text(encoding="utf-8") if ledger_path.exists() else ""
+        prior = before["ledger"]
+        appended = text[len(prior):] if text.startswith(prior) else ""
+        status = git(
+            consumer,
+            "status",
+            "--porcelain",
+            "--",
+            ".plan/sync-ledger.md",
+        ).stdout.strip()
+        return {
+            "ledger_entry_appended": text.startswith(prior) and len(text) > len(prior),
+            "ledger_prefix_unchanged": text.startswith(prior),
+            "ledger_committed_clean": status == "",
+            "ledger_entry_truthful": (
+                before["partner_head"][:7] in appended
+                and ".plan/required.md" in appended
+            ),
+        }
     raise ValueError(f"unknown scenario: {scenario}")
 
 
@@ -526,6 +569,15 @@ def run_scenario(executable, bundle_root, profile, output, scenario):
             for tool_name in ("artifact_types", "parallax", "warrant")
         },
     }
+    if scenario == "AC9":
+        before["ledger"] = (consumer / ".plan/sync-ledger.md").read_text(
+            encoding="utf-8"
+        )
+        before["partner_head"] = git(
+            scenario_dir / "partner",
+            "rev-parse",
+            "HEAD",
+        ).stdout.strip()
     audit_path = scenario_dir / "command-audit.jsonl"
     audit_script = scenario_dir / "command_audit.py"
     write_file(audit_script, COMMAND_AUDIT, executable=True)
@@ -591,6 +643,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--profile", required=True)
     parser.add_argument("--out", required=True, type=Path)
+    parser.add_argument("--scenario", choices=SCENARIOS)
     arguments = parser.parse_args(argv)
 
     profile = load_json(arguments.profile)
@@ -606,7 +659,8 @@ def main(argv=None):
         arguments.out.mkdir(parents=True, exist_ok=True)
         events = []
         state = {"scenarios": {}}
-        for scenario in SCENARIOS:
+        selected = [arguments.scenario] if arguments.scenario else SCENARIOS
+        for scenario in selected:
             scenario_events, scenario_state_data = run_scenario(
                 executable,
                 bundle_root,
@@ -633,7 +687,7 @@ def main(argv=None):
                 "driver": "trae-agent",
                 "driver_version": DRIVER_VERSION,
                 "cli_version": cli_version(executable),
-                "scenarios": list(SCENARIOS),
+                "scenarios": list(selected),
             }
         )
     )

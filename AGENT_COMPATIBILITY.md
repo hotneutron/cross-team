@@ -27,7 +27,7 @@ Current per-profile triplet a new run certifies against (from
 | `claude-code` | Claude Code 2.1.215 | `claude-opus-4-8` | 1.3 |
 | `codex-cli` | Codex CLI 0.144.5 | undeclared | 1.0 |
 | `opencode` | opencode 1.0 | `deepseek-v4-pro` | 1.0 |
-| `trae-agent` | TRAE CLI 0.200.18 | `GPT-5.6-Terra` | 0.1 |
+| `trae-agent` | TRAE CLI 0.200.18 | `GPT-5.6-Terra` | 0.2 |
 
 ## Status Definitions
 
@@ -35,7 +35,7 @@ Current per-profile triplet a new run certifies against (from
 |---|---|
 | `PLANNED` | Selected target; no passing compatibility report yet. |
 | `CERTIFIED` | The report passed every applicable hard scenario at its recorded coordinates. |
-| `PARTIAL` | Scenarios passed, but a required capability, concrete model ID, or the required number of completed runs is not yet satisfied. |
+| `PARTIAL` | A real-agent smoke produced evidence, but one or more certification requirements are still unmet. |
 | `BLOCKED` | The runtime, credentials, or required audit capability is unavailable. |
 
 `CERTIFIED` is runtime- and version-specific. It does not certify every model
@@ -51,7 +51,7 @@ the record's guide hash matches the current one above.
 | [Gemini CLI](https://geminicli.com/docs/hooks/) | Recorded injection or `GEMINI.md` bridge | `BeforeTool` and `AfterTool` driver | `PLANNED` | Terminal agent with documented tool hooks and JSON hook I/O. |
 | [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks) | Native `AGENTS.md` discovery or recorded injection | `preToolUse` and `postToolUse` driver | `PLANNED` | Terminal agent with documented lifecycle hooks that can audit and deny tool actions. |
 | [OpenCode](https://opencode.ai/docs/agents/) | Recorded injection | Poll-based watcher driver and normalized tool-event audit | `CERTIFIED` | Three certification runs passed AC1-AC9 at the current coordinates; guard enforcement is unproven. |
-| [TRAE Agent](https://docs.trae.ai/ide/agent-overview) | Verified native `AGENTS.md` discovery | TRAE CLI JSON command-event audit; guard integration remains unproven | `PARTIAL` | One synthetic smoke run passed AC1-AC6, but AC7 timed out and the project guard hook was not observed. |
+| [TRAE Agent](https://docs.trae.ai/ide/agent-overview) | Verified native `AGENTS.md` discovery | TRAE CLI JSON command-event audit; guard integration remains unproven | `CERTIFIED` | Three current-guide full runs passed AC1-AC9; guard enforcement remains unproven. |
 
 The first implementation order is Claude Code, OpenCode, Codex CLI, Gemini
 CLI, GitHub Copilot CLI, then TRAE Agent. This order uses existing adapters
@@ -67,7 +67,7 @@ first, then runtimes with documented instruction and hook surfaces.
 | `codex-cli` | `codex-cli` | `not reported` | `b7e28e160875` | `codex-cli 1.0; Codex CLI 0.144.5` | AC1-AC8 PASS (one run) | `PARTIAL` | Native guide discovery, normalized CLI JSONL audit, PreToolUse guard, and poll-based watcher surfacing were observed. Two further runs and a concrete model ID are required. |
 | `gemini-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
 | `github-copilot-cli` | `not tested` | `not tested` | `not tested` | `not tested` | Not run | `PLANNED` | Nothing yet. |
-| `trae-agent` | `native-hooks-smoke` | `GPT-5.6-Terra` | `b7e28e160875` | `compat/drivers/trae-agent 0.1; TRAE CLI 0.200.18` | AC1-AC6 PASS; AC7-AC8 BLOCKED | `PARTIAL` | Native `AGENTS.md` injection and terminal-action auditing were observed. AC7 timed out twice before an agent/tool event, AC8 was not run, and isolated `PreToolUse` guard execution was not observed; this is not certification. |
+| `trae-agent` | `trae-agent` | `GPT-5.6-Terra` | `e70d87db8e6d` | `compat/drivers/trae-agent 0.2; TRAE CLI 0.200.18` | 3 runs: AC1-AC9 all PASS (27/27) | `CERTIFIED` | At the current coordinates: native `AGENTS.md` injection, TRAE CLI JSON command-event auditing, watcher surfacing, and committed AC9 ledger closure were observed in three full runs. Guard enforcement remains unproven. |
 
 A row is only a real-agent certification when `Agent runtime`, `Profile`,
 `Model ID`, `Guide hash`, and `Driver version` identify a concrete runtime
@@ -76,11 +76,17 @@ sanitized PASS report. It speaks for the current guide only when its guide
 hash and triplet equal the Current Coordinates above. The scripted row must
 not be used as evidence that any LLM runtime follows `AGENTS.md`.
 
-The TRAE Agent row is a local, single-run smoke result from 2026-07-16. Its raw
-traces were deliberately retained only under `/private/tmp`; the sanitized
-scenario outcomes and blockers are recorded in `compat/status.json`. It does
-not satisfy the required three completed runs, complete AC1-AC8 coverage, or
-guard-enforcement proof.
+The TRAE Agent row is a three-run certification triple from 2026-07-19 at the
+current coordinates (contract 1.4, guide hash `e70d87db`, bundle commit
+`dd603006`). Driver 0.2 adds AC9 to the default scenario set and records
+ledger-prefix, commit-clean, and truthfulness state for the configured ledger.
+Three full AC1-AC9 runs completed at `/private/tmp/trae-agent-full-run-2`,
+`/private/tmp/trae-agent-full-run-3`, and
+`/private/tmp/trae-agent-full-run-4`; all 27 scenario results passed,
+including watcher surfacing and committed AC9 ledger closure. Guard
+enforcement remains BLOCKED: the TRAE profile has no proven project
+`PreToolUse` hook through which the Parallax read guard could intercept and
+deny unauthorized partner access.
 
 The OpenCode row is a three-run certification triple from 2026-07-19 at the
 current coordinates (contract 1.4, guide hash `e70d87db`). All 27 scenario
@@ -91,11 +97,12 @@ enforcement remains BLOCKED: OpenCode has no verified before-tool hook API
 through which the Parallax read guard could intercept and deny unauthorized
 partner access.
 
-The guide hash `b7e28e160875` recorded by the Codex CLI and TRAE
-rows belongs to a pre-merge state of the harness change and matches no
-committed version of `AGENTS.md`; the committed guide has since gained the
-sync close-out rules. Those rows therefore describe runs against an earlier
-guide and count toward no current certification until re-run.
+The guide hash `b7e28e160875` recorded by the Codex CLI row belongs to a
+pre-merge state of the harness change and matches no committed version of
+`AGENTS.md`; the committed guide has since gained the sync close-out rules.
+That row therefore describes a run against an earlier guide and counts toward
+no current certification until re-run. The current TRAE row supersedes an
+earlier same-day TRAE smoke at that stale hash.
 
 The Codex CLI row is a local, single-run smoke result from 2026-07-16. All 8
 synthetic scenarios passed in fresh disposable consumer/partner fixtures using

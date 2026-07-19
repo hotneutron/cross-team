@@ -175,14 +175,14 @@
     {
       "id": "trae-agent",
       "agent_runtime": "trae-agent",
-      "profile": "native-hooks-smoke",
+      "profile": "trae-agent",
       "model_id": "GPT-5.6-Terra",
-      "guide_hash": "b7e28e16087574772c628b92e743f79c43a302e31f96660142078cc180faf32b",
-      "driver_version": "compat/drivers/trae-agent 0.1; TRAE CLI 0.200.18",
-      "status": "PARTIAL",
+      "guide_hash": "e70d87db8e6d8b4ffa6e3a9b39d7da544cf42ef9c22498724bff518a8b1be13d",
+      "driver_version": "compat/drivers/trae-agent 0.2; TRAE CLI 0.200.18",
+      "status": "CERTIFIED",
       "classification": {
-        "guide_compatible": "BLOCKED",
-        "automation_compatible": "BLOCKED",
+        "guide_compatible": "PASS",
+        "automation_compatible": "PASS",
         "guard_enforced": "BLOCKED"
       },
       "latest_report": {
@@ -194,18 +194,17 @@
           "AC4": "PASS",
           "AC5": "PASS",
           "AC6": "PASS",
-          "AC7": "BLOCKED",
-          "AC8": "BLOCKED"
+          "AC7": "PASS",
+          "AC8": "PASS",
+          "AC9": "PASS"
         },
-        "runs_completed": 1,
+        "runs_completed": 3,
         "guide_delivery": "native AGENTS.md",
         "audit": "TRAE CLI JSON command events",
-        "evidence": "2026-07-16 local synthetic smoke run; raw traces retained only in /private/tmp",
-        "certifies_real_agent": false,
+        "evidence": "2026-07-19 certification triple at current guide hash (contract 1.4) with three completed full AC1-AC9 runs using driver 0.2 at /private/tmp/trae-agent-full-run-2, /private/tmp/trae-agent-full-run-3, and /private/tmp/trae-agent-full-run-4; 27/27 scenario results PASS.",
+        "certifies_real_agent": true,
         "blockers": [
-          "AC7 timed out twice before any agent or tool event; AC8 was not run.",
-          "The isolated project PreToolUse hook did not execute, so guard installation was not proven.",
-          "Certification requires complete AC1-AC8 evidence and three completed runs."
+          "guard_enforced is BLOCKED: the TRAE profile has no proven project PreToolUse hook, so guard enforcement remains unproven."
         ]
       }
     }
