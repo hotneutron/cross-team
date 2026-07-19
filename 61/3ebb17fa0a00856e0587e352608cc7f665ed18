@@ -1,0 +1,21 @@
+AGENTS.md
+  s_bfc9642224e748::t_228cc8edcd9052 9-11,16-19,25,30-36,40-43,47-48,58-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "613ebb17fa0a00856e0587e352608cc7f665ed18",
+  "prompts": {},
+  "sessions": {
+    "s_bfc9642224e748": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f204e96c-05f3-4155-89ac-b8b2392759c3",
+        "model": "unknown"
+      },
+      "human_author": "Chun Liu <chun.liu@bytedance.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
