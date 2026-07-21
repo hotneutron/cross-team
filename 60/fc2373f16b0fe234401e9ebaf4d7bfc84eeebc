@@ -1,0 +1,21 @@
+README.md
+  s_1d105adeb4f818::t_1ca2638545e502 3,5-20,26-28,72-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "60fc2373f16b0fe234401e9ebaf4d7bfc84eeebc",
+  "prompts": {},
+  "sessions": {
+    "s_1d105adeb4f818": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5382a1b5-91aa-418e-862b-5de3ddc5037d",
+        "model": "unknown"
+      },
+      "human_author": "Chun Liu <chun.liu@bytedance.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
