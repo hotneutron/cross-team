@@ -1,19 +1,31 @@
 # cross-team — independent cross-checking across repositories
 
-Portable bundle for two or more AI teams that independently brainstorm the same
-problem, then cross-check and corroborate their work through a controlled
-cross-repository exchange.
+**Measured disagreement between independent agents — packaged for adoption.**
 
-This repository is an adoption boundary. A consumer project adds one submodule,
-then owns one static config file outside the submodule.
+One coding agent gives you a flat, confident view of a problem. A second
+opinion is only worth something if it is independent — and in most multi-agent
+setups it isn't: the reviewer shares context with the author, or reads its
+uncommitted work, so the "second view" is an echo and agreement means nothing.
+
+A parallax is one object seen from two vantage points; the displacement
+between the views is the signal. Here, two or more AI teams independently
+brainstorm the same problem in separate repos, then cross-check and
+corroborate their work through a controlled cross-repository exchange — and
+the independence that makes their divergence meaningful is *machine-enforced*,
+not trusted. The full pitch and protocol live in
+[`parallax/`](parallax/README.md).
+
+This repository is the adoption boundary that makes parallax usable: a
+consumer project adds **one submodule**, then owns **one static config file**
+outside the submodule.
 
 ## Layout
 
 | Path | Purpose |
 |---|---|
-| `artifact_types/` | Shared artifact vocabulary registry. |
-| `parallax/` | Cross-team sync daemon. |
-| `warrant/` | Frontmatter authority checker. |
+| `parallax/` | The cross-team sync daemon — enforces independence, measures divergence. |
+| `warrant/` | Frontmatter authority checker — is a doc's declared authority warranted? |
+| `artifact_types/` | Shared artifact vocabulary registry both tools are written against. |
 | `compat/` | Agent guide compatibility contract and scripted validator. |
 | `cross-team.default.json` | Neutral default config copied by consumers. |
 | `AGENTS.md` | Agent rules for bundle mechanics only. |
@@ -57,8 +69,11 @@ Both tools read the same versioned consumer config. They do not require
 
 ## Agent Compatibility
 
-See [AGENT_COMPATIBILITY.md](AGENT_COMPATIBILITY.md) for the current agent
-compatibility states, initial release targets, and certification criteria.
+A cross-check is apples-to-apples only when each agent runtime demonstrably
+operates the same guide contract. [AGENT_COMPATIBILITY.md](AGENT_COMPATIBILITY.md)
+records which runtimes are certified — with pinned guide hashes and
+runtime/model/driver coordinates — plus current release targets and the
+certification criteria, including the gaps that remain open.
 
 ## Release Gates
 
